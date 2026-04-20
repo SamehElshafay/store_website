@@ -15,11 +15,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // First Run Essential Seeders
+        $this->call([
+            RoleSeeder::class,
+            ParcelStatusSeeder::class,
         ]);
+
+        // Seed the current development user
+        User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Also ensure the admin@smartstore.com user from RoleSeeder is available
+        // as it might be used for sender/admin processing
     }
 }
