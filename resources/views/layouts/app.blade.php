@@ -109,6 +109,17 @@
             color: #f1f5f9 !important;
         }
 
+        [data-theme="dark"] .btn-dark-soft {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f1f5f9 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-theme="dark"] .btn-dark-soft:hover {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #fff !important;
+        }
+
         [data-theme="dark"] .btn-outline-premium {
             border-color: #818cf8 !important;
             color: #818cf8 !important;

@@ -194,20 +194,10 @@
                             <div class="small text-muted">{{ $parcel->created_at->format('h:i A') }}</div>
                         </td>
                         <td class="text-end pe-4">
-                            <div class="btn-group shadow-sm rounded-pill overflow-hidden bg-dark-soft p-0">
-                                <a href="/parcels/{{ $parcel->id }}" class="btn btn-dark-soft btn-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 38px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
+                            <div class="d-flex justify-content-end">
+                                <a href="/parcels/{{ $parcel->id }}" class="btn btn-dark-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <button type="button" class="btn btn-primary btn-sm d-flex align-items-center justify-content-center" 
-                                        style="width: 42px; height: 38px;"
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#statusUpdateModal"
-                                        data-parcel-id="{{ $parcel->id }}" 
-                                        data-parcel-title="{{ $parcel->title }}"
-                                        data-current-order="{{ $parcel->status_id ? $parcel->statusModel->sort_order : 0 }}"
-                                        data-bs-toggle="tooltip" title="{{ __('Update Status') }}">
-                                    <i class="bi bi-arrow-right-circle"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>
