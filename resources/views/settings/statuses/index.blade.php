@@ -66,7 +66,7 @@
 
                         <div class="d-flex gap-2 mt-auto">
                             <button class="btn btn-icon btn-primary-soft rounded-circle btn-sm" 
-                                onclick="editStatus({{ json_encode($status) }})" title="{{ __('Edit') }}">
+                                onclick='editStatus(@json($status))' title="{{ __('Edit') }}">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             @if(!$status->is_default)
