@@ -63,8 +63,8 @@ class ContactController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => __('Recipient saved successfully!'),
-                'redirect' => route('contacts.index')
+                'message' => $contact->type == 'sender' ? __('Sender saved successfully!') : __('Recipient saved successfully!'),
+                'redirect' => route('contacts.index', ['type' => $contact->type])
             ]);
         }
 
@@ -107,8 +107,8 @@ class ContactController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => __('Recipient updated successfully!'),
-                'redirect' => route('contacts.index')
+                'message' => $contact->type == 'sender' ? __('Sender updated successfully!') : __('Recipient updated successfully!'),
+                'redirect' => route('contacts.index', ['type' => $contact->type])
             ]);
         }
 

@@ -201,6 +201,17 @@
             transform: scale(1.1);
             background: rgba(99, 102, 241, 0.1);
         }
+        .btn-dispatch {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+        }
+        .btn-dispatch:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+            color: white !important;
+        }
     </style>
 
     <script>
@@ -268,10 +279,21 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-bold {{ request()->routeIs('contacts.*') ? 'active' : '' }}" href="{{ route('contacts.index') }}">
-                                <i class="bi bi-people me-1"></i> {{ __('Recipients') }}
+                            <a class="nav-link fw-bold {{ request()->routeIs('parcels.index') ? 'active' : '' }}" href="{{ route('parcels.index') }}">
+                                <i class="bi bi-arrow-left-right me-1"></i> {{ __('Movements') }}
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold {{ request()->get('type') == 'sender' ? 'active' : '' }}" href="{{ route('contacts.index', ['type' => 'sender']) }}">
+                                <i class="bi bi-person-up me-1"></i> {{ __('Senders') }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold {{ request()->get('type') == 'recipient' ? 'active' : '' }}" href="{{ route('contacts.index', ['type' => 'recipient']) }}">
+                                <i class="bi bi-person-down me-1"></i> {{ __('Recipients') }}
+                            </a>
+                        </li>
+
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ request()->routeIs('parcel-statuses.*') ? 'active' : '' }}" href="{{ route('parcel-statuses.index') }}">
                                 <i class="bi bi-gear me-1"></i> {{ __('Statuses') }}
@@ -291,6 +313,7 @@
                             @endif
                         @else
                             <li class="nav-item dropdown">
+
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }}
                                 </a>
@@ -299,8 +322,14 @@
                                     <a class="dropdown-item py-2" href="{{ route('home') }}">
                                         <i class="bi bi-speedometer2 me-2"></i> {{ __('Dashboard') }}
                                     </a>
-                                    <a class="dropdown-item py-2" href="{{ route('contacts.index') }}">
-                                        <i class="bi bi-people me-2"></i> {{ __('Recipients') }}
+                                    <a class="dropdown-item py-2" href="{{ route('parcels.index') }}">
+                                        <i class="bi bi-arrow-left-right me-2"></i> {{ __('Movements') }}
+                                    </a>
+                                    <a class="dropdown-item py-2" href="{{ route('contacts.index', ['type' => 'sender']) }}">
+                                        <i class="bi bi-person-up me-2"></i> {{ __('Senders') }}
+                                    </a>
+                                    <a class="dropdown-item py-2" href="{{ route('contacts.index', ['type' => 'recipient']) }}">
+                                        <i class="bi bi-person-down me-2"></i> {{ __('Recipients') }}
                                     </a>
                                     <a class="dropdown-item py-2" href="{{ route('parcel-statuses.index') }}">
                                         <i class="bi bi-gear me-2"></i> {{ __('Status Settings') }}
@@ -467,9 +496,10 @@
             }, 5000);
         };
     </script>
+    @include('parcels.partials.dispatch_modal')
+    @stack('modals')
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    @stack('modals')
+    @include('parcels.partials.dispatch_scripts')
 </body>
 </html>

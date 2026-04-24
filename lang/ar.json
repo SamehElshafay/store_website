@@ -148,5 +148,7 @@
     "All selected items have the same status.": "جميع الطرود المختارة لها نفس الحالة.",
     "Change Status": "تغيير الحالة",
     "Waiting for selection...": "بانتظار الاختيار...",
-    "Mixed statuses selected. All must match.": "حالات مختلفة مختارة. يجب أن تتطابق الحالات."
+    "Mixed statuses selected. All must match.": "حالات مختلفة مختارة. يجب أن تتطابق الحالات.",
+    "Movements": "حركات",
+    "Senders": "مرسلين"
 }

@@ -60,7 +60,12 @@
                     <div class="extra-small text-muted">{{ $parcel->created_at->format('h:i A') }}</div>
                 </td>
                 <td class="pe-4 text-end">
-                    <div class="d-flex justify-content-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        @if($parcel->status != 'delivered')
+                        <button onclick="event.preventDefault(); event.stopPropagation(); window.openDispatchModal({{ $parcel->id }})" class="btn btn-dispatch rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="{{ __('Dispatch Parcel') }}">
+                            <i class="bi bi-truck"></i>
+                        </button>
+                        @endif
                         <a href="{{ route('parcels.show', $parcel->id) }}" class="btn btn-dark-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
                             <i class="bi bi-eye"></i>
                         </a>

@@ -23,9 +23,15 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $deliveredStatus = \App\Models\ParcelStatus::where('key', 'delivered')->first();
+        $deliveredId = $deliveredStatus ? $deliveredStatus->id : 0;
+
         $stats = [
-            'total' => \App\Models\Parcel::count(),
+            'total_stock' => \App\Models\Parcel::where('status_id', '!=', $deliveredId)->count(),
             'received_today' => \App\Models\Parcel::whereDate('created_at', \Carbon\Carbon::today())->count(),
+            'delivered_today' => \App\Models\Parcel::where('status_id', $deliveredId)
+                ->whereDate('updated_at', \Carbon\Carbon::today())
+                ->count(),
         ];
 
         $status_counts = \App\Models\Parcel::select('status_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))

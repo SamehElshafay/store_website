@@ -116,6 +116,7 @@ class ParcelController extends Controller
             'title' => 'required|string|max:255',
             'barcode_in' => 'required|string|unique:parcels,barcode_in',
             'barcode_collection' => 'nullable|string|max:255',
+            'sender_contact_id' => 'required|exists:contacts,id',
             'recipient_contact_id' => 'required|exists:contacts,id',
             'delivery_price' => 'nullable|numeric|min:0',
             'collection_amount' => 'nullable|numeric|min:0',
@@ -141,7 +142,6 @@ class ParcelController extends Controller
             'status_id' => $defaultStatus ? $defaultStatus->id : null,
             'received_by' => Auth::id(),
             'received_at' => Carbon::now(),
-            'delivered_at' => Carbon::now(),
             'net_collection' => $net,
         ]));
 
@@ -160,10 +160,40 @@ class ParcelController extends Controller
         $parcel = Parcel::where('id', $id)
             ->orWhere('barcode_in', $id)
             ->orWhere('barcode_out', $id)
-            ->with('receiver')
+            ->with(['receiver', 'senderContact', 'recipientContact'])
             ->firstOrFail();
 
         return response()->json($parcel);
+    }
+
+    /**
+     * Find parcel by barcode.
+     */
+    public function findByBarcode($barcode)
+    {
+        $parcel = Parcel::where('barcode_in', $barcode)
+            ->orWhere('barcode_out', $barcode)
+            ->with(['senderContact', 'recipientContact', 'statusModel'])
+            ->first();
+
+        if (!$parcel) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Parcel not found with this barcode.')
+            ], 404);
+        }
+
+        if ($parcel->status === 'delivered') {
+            return response()->json([
+                'success' => false,
+                'message' => __('This parcel has already been dispatched/delivered.')
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $parcel
+        ]);
     }
 
     /**
@@ -190,12 +220,16 @@ class ParcelController extends Controller
 
         $validated = $request->validate([
             'delivered_to' => 'nullable|string|max:255',
+            'sender_contact_id' => 'nullable|exists:contacts,id',
             'recipient_contact_id' => 'nullable|exists:contacts,id',
             'barcode_out' => 'nullable|string|unique:parcels,barcode_out,' . $parcel->id,
             'collection_amount' => 'nullable|numeric|min:0',
             'net_collection' => 'nullable|numeric|min:0',
             'collection_method' => 'nullable|in:cash,card,transfer,none',
             'delivery_date' => 'nullable|date',
+            'booking_date' => 'nullable|date',
+            'delivery_price' => 'nullable|numeric|min:0',
+            'invoice_number' => 'nullable|string|max:255',
             'status' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
@@ -290,6 +324,142 @@ class ParcelController extends Controller
             'message' => $updatedCount > 0 
                 ? __(':count parcels updated successfully.', ['count' => $updatedCount])
                 : __('No parcels were updated. Check sequence validation.'),
+        ]);
+    }
+
+    /**
+     * Bulk update parcel statuses by barcode.
+     */
+    public function bulkUpdateStatusByBarcode(Request $request)
+    {
+        $validated = $request->validate([
+            'barcodes' => 'required|array',
+            'barcodes.*' => 'required|string',
+            'status_id' => 'required|exists:parcel_statuses,id',
+        ]);
+
+        $newStatus = \App\Models\ParcelStatus::findOrFail($request->status_id);
+        $barcodes = array_unique($request->barcodes);
+        
+        $parcels = Parcel::with('statusModel')
+            ->whereIn('barcode_in', $barcodes)
+            ->orWhereIn('barcode_out', $barcodes)
+            ->get();
+
+        $updatedCount = 0;
+        $errors = [];
+        $foundBarcodes = [];
+
+        foreach ($parcels as $parcel) {
+            $foundBarcodes[] = $parcel->barcode_in;
+            $foundBarcodes[] = $parcel->barcode_out;
+
+            $currentOrder = $parcel->statusModel ? $parcel->statusModel->sort_order : 0;
+            
+            if ($newStatus->sort_order <= $currentOrder) {
+                $errors[] = "#{$parcel->barcode_in}: " . __('Cannot move backward to :status', ['status' => $newStatus->display_name]);
+                continue;
+            }
+
+            $parcel->update([
+                'status_id' => $newStatus->id,
+                'status' => $newStatus->key
+            ]);
+            $updatedCount++;
+        }
+
+        // Check for missing barcodes
+        $missing = array_diff($barcodes, array_filter($foundBarcodes));
+        foreach ($missing as $m) {
+            $errors[] = "$m: " . __('Parcel not found');
+        }
+
+        return response()->json([
+            'success' => $updatedCount > 0,
+            'updated' => $updatedCount,
+            'errors' => $errors,
+            'message' => $updatedCount > 0 
+                ? __(':count parcels updated successfully.', ['count' => $updatedCount])
+                : __('No parcels were updated.'),
+        ]);
+    }
+
+    /**
+     * Bulk register or update parcels.
+     */
+    public function bulkRegister(Request $request)
+    {
+        $validated = $request->validate([
+            'parcels' => 'required|array',
+            'parcels.*.barcode' => 'required|string',
+            'parcels.*.details' => 'nullable|array',
+            'status_id' => 'required|exists:parcel_statuses,id',
+        ]);
+
+        $statusModel = \App\Models\ParcelStatus::findOrFail($request->status_id);
+        $results = [
+            'created' => 0,
+            'updated' => 0,
+            'errors' => []
+        ];
+
+        foreach ($request->parcels as $item) {
+            $barcode = $item['barcode'];
+            $details = $item['details'] ?? [];
+
+            // Find existing or create new
+            $parcel = Parcel::where('barcode_in', $barcode)
+                ->orWhere('barcode_out', $barcode)
+                ->first();
+
+            $data = [
+                'status_id' => $statusModel->id,
+                'status' => $statusModel->key,
+            ];
+
+            // Map details if provided
+            if (!empty($details)) {
+                if (isset($details['title'])) $data['title'] = $details['title'];
+                if (isset($details['sender_id'])) $data['sender_contact_id'] = $details['sender_id'];
+                if (isset($details['recipient_id'])) $data['recipient_contact_id'] = $details['recipient_id'];
+                if (isset($details['collection_amount'])) $data['collection_amount'] = $details['collection_amount'];
+                if (isset($details['delivery_price'])) $data['delivery_price'] = $details['delivery_price'];
+                
+                // Auto-calc net collection
+                $coll = floatval($details['collection_amount'] ?? 0);
+                $deliv = floatval($details['delivery_price'] ?? 0);
+                $data['net_collection'] = $coll - $deliv;
+
+                if (isset($details['service_type'])) $data['service_type'] = $details['service_type'];
+                if (isset($details['notes'])) $data['notes'] = $details['notes'];
+                if (isset($details['booking_date'])) $data['booking_date'] = $details['booking_date'];
+                if (isset($details['delivery_date'])) $data['delivery_date'] = $details['delivery_date'];
+            }
+
+            if ($parcel) {
+                // Update existing
+                $parcel->update($data);
+                $results['updated']++;
+            } else {
+                // Create new
+                $data['barcode_in'] = $barcode;
+                if (!isset($data['title'])) $data['title'] = __('Bulk Registered Parcel') . " " . $barcode;
+                
+                Parcel::create($data);
+                $results['created']++;
+            }
+        }
+
+        $total = $results['created'] + $results['updated'];
+
+        return response()->json([
+            'success' => $total > 0,
+            'message' => __(':total parcels processed (:created created, :updated updated).', [
+                'total' => $total,
+                'created' => $results['created'],
+                'updated' => $results['updated']
+            ]),
+            'data' => $results
         ]);
     }
 

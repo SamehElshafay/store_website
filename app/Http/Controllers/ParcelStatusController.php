@@ -18,6 +18,8 @@ class ParcelStatusController extends Controller
             'name_ar' => 'required|string|max:255',
             'name_en' => 'required|string|max:255',
             'color' => 'nullable|string|max:20',
+            'icon' => 'nullable|string|max:100',
+            'modal_type' => 'nullable|string|in:receive,dispatch',
         ]);
 
         // Auto-assign next sort order
@@ -44,6 +46,8 @@ class ParcelStatusController extends Controller
             'name_ar' => 'required|string|max:255',
             'name_en' => 'required|string|max:255',
             'color' => 'nullable|string|max:20',
+            'icon' => 'nullable|string|max:100',
+            'modal_type' => 'nullable|string|in:receive,dispatch',
         ]);
 
         $status->update($validated);
@@ -102,6 +106,24 @@ class ParcelStatusController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('Default status updated successfully')
+        ]);
+    }
+
+    public function toggleModal(Request $request, $id)
+    {
+        $status = \App\Models\ParcelStatus::findOrFail($id);
+        
+        $request->validate([
+            'modal_type' => 'required|in:receive,dispatch'
+        ]);
+
+        $status->update([
+            'modal_type' => $request->modal_type
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Dialog type updated successfully')
         ]);
     }
 }

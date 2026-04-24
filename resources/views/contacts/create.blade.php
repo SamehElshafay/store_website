@@ -13,8 +13,8 @@
         </a>
         <div>
             <h4 class="fw-bold mb-1" style="color: var(--text-main);">
-                <i class="bi bi-person-plus-fill me-2" style="color: #6366f1;"></i>
-                {{ __('New Contact') }}
+                <i class="bi {{ $defaultType == 'sender' ? 'bi-person-up' : 'bi-person-plus-fill' }} me-2" style="color: #6366f1;"></i>
+                {{ $defaultType == 'sender' ? __('New Sender') : __('New Recipient') }}
             </h4>
             <p class="text-muted small mb-0">{{ __('Fill in the contact details below') }}</p>
         </div>
@@ -22,7 +22,7 @@
 
     <form id="contactForm">
         @csrf
-        <input type="hidden" name="type" value="recipient">
+        <input type="hidden" name="type" value="{{ $defaultType }}">
 
         <div class="row justify-content-center g-4">
             <div class="col-lg-8">
@@ -31,15 +31,15 @@
                 <div class="glass-card rounded-4 p-4 mb-4 shadow-lg border-0">
                     <h6 class="fw-bold mb-4 d-flex align-items-center gap-2" style="color: var(--text-main);">
                         <span style="width:28px;height:28px;background:rgba(99,102,241,0.15);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;">
-                            <i class="bi bi-person-badge" style="color:#6366f1;font-size:0.8rem;"></i>
+                            <i class="bi {{ $defaultType == 'sender' ? 'bi-person-up' : 'bi-person-badge' }}" style="color:#6366f1;font-size:0.8rem;"></i>
                         </span>
-                        {{ __('Recipient Information') }}
+                        {{ $defaultType == 'sender' ? __('Sender Information') : __('Recipient Information') }}
                     </h6>
 
                     <div class="row g-4">
                         <div class="col-md-7">
                             <label class="form-label small fw-bold text-uppercase text-muted letter-spacing-1">{{ __('Full Name') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control border-0 bg-dark-soft p-3 rounded-3" placeholder="{{ __('Enter recipient full name') }}" required>
+                            <input type="text" name="name" class="form-control border-0 bg-dark-soft p-3 rounded-3" placeholder="{{ $defaultType == 'sender' ? __('Enter sender full name') : __('Enter recipient full name') }}" required>
                             <div class="invalid-feedback name-error"></div>
                         </div>
                         <div class="col-md-5">
@@ -62,7 +62,7 @@
                 <div class="d-flex gap-3 mt-4">
                     <button type="submit" id="submitBtn" class="btn btn-lg rounded-pill px-5 fw-bold flex-grow-1 position-relative overflow-hidden" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none; min-height: 58px; transition: all 0.3s ease;">
                         <span class="btn-text d-flex align-items-center justify-content-center gap-2">
-                            <i class="bi bi-person-plus"></i> {{ __('Save Recipient') }}
+                            <i class="bi bi-person-plus"></i> {{ $defaultType == 'sender' ? __('Save Sender') : __('Save Recipient') }}
                         </span>
                         <span class="btn-loading d-none">
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -123,13 +123,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 // SUCCESS: Use the theme's showToast function
                 if (window.showToast) {
-                    window.showToast("{{ __('Success') }}", result.message || "{{ __('Recipient saved successfully!') }}", 'success');
+                    const msg = "{{ $defaultType == 'sender' ? __('Sender saved successfully!') : __('Recipient saved successfully!') }}";
+                    window.showToast("{{ __('Success') }}", result.message || msg, 'success');
                 } else {
                     alert("{{ __('Saved successfully!') }}");
                 }
 
                 setTimeout(() => {
-                    window.location.href = result.redirect || "{{ route('contacts.index') }}";
+                    window.location.href = result.redirect || "{{ route('contacts.index', ['type' => $defaultType]) }}";
                 }, 1000);
 
             } else {

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ParcelStatus extends Model
 {
-    protected $fillable = ['name', 'name_ar', 'name_en', 'key', 'color', 'is_default', 'sort_order'];
+    protected $fillable = ['name', 'name_ar', 'name_en', 'key', 'color', 'icon', 'is_default', 'modal_type', 'sort_order'];
 
     public function getDisplayNameAttribute()
     {

@@ -75,16 +75,20 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="fw-bold mb-0 text-uppercase letter-spacing-1 small text-muted">{{ __('Current Status') }}</h5>
                         @php
+                            $currentStatusModel = $parcel->statusModel;
                             $statusInfo = [
-                                'ready' => ['bg' => 'bg-primary-soft', 'text' => 'text-primary', 'icon' => 'bi-box'],
-                                'delivered' => ['bg' => 'bg-success-soft', 'text' => 'text-success', 'icon' => 'bi-check2-circle'],
-                                'in_transit' => ['bg' => 'bg-warning-soft', 'text' => 'text-warning', 'icon' => 'bi-truck'],
-                                'returned' => ['bg' => 'bg-secondary-soft', 'text' => 'text-secondary', 'icon' => 'bi-arrow-left-right'],
-                                'damaged' => ['bg' => 'bg-danger-soft', 'text' => 'text-danger', 'icon' => 'bi-exclamation-octagon'],
-                            ][$parcel->status] ?? ['bg' => 'bg-secondary-soft', 'text' => 'text-secondary', 'icon' => 'bi-circle-fill'];
+                                'bg' => 'bg-primary-soft', 
+                                'text' => 'text-primary', 
+                                'icon' => $currentStatusModel->icon ?? 'bi-circle-fill'
+                            ];
+                            
+                            // Map colors if needed, or use status color
+                            if ($currentStatusModel) {
+                                // You could also use $currentStatusModel->color directly for more precision
+                            }
                         @endphp
-                        <span class="badge {{ $statusInfo['bg'] }} {{ $statusInfo['text'] }} rounded-pill px-4 py-2 fs-6 text-capitalize">
-                            <i class="bi {{ $statusInfo['icon'] }} me-2 small"></i> {{ __($parcel->status) }}
+                        <span class="badge {{ $statusInfo['bg'] }} {{ $statusInfo['text'] }} rounded-pill px-4 py-2 fs-6 text-capitalize" style="{{ $currentStatusModel ? 'color: '.$currentStatusModel->color.' !important;' : '' }}">
+                            <i class="bi {{ $statusInfo['icon'] }} me-2 small"></i> {{ $currentStatusModel->display_name ?? $parcel->status }}
                         </span>
                     </div>
                     
@@ -101,17 +105,11 @@
                                 @php 
                                     $isPast = $step->sort_order < $currentOrder;
                                     $isCurrent = $step->id === $parcel->status_id;
-                                    
-                                    $icon = 'bi-dot';
-                                    if($step->key == 'ready') $icon = 'bi-box';
-                                    if($step->key == 'in_transit') $icon = 'bi-truck';
-                                    if($step->key == 'delivered') $icon = 'bi-check2-circle';
-                                    if($step->key == 'returned') $icon = 'bi-arrow-left-right';
-                                    if($step->key == 'damaged') $icon = 'bi-exclamation-octagon';
+                                    $icon = $step->icon ?: 'bi-dot';
                                 @endphp
                                 <div class="col text-center position-relative timeline-item {{ $isPast ? 'is-past' : '' }} {{ $isCurrent ? 'is-current' : '' }}">
                                     <div class="timeline-node mx-auto {{ $isPast || $isCurrent ? 'shadow-sm' : 'bg-dark-soft border text-muted' }}" 
-                                         style="{{ $isPast || $isCurrent ? 'background-color: '.$step->color.'; color: white;' : '' }}">
+                                         style="{{ $isPast || $isCurrent ? 'background-color: '.$step->color.'; color: white; --glow-color: '.$step->color.';' : '' }}">
                                         <i class="bi {{ $icon }}"></i>
                                     </div>
                                     <div class="mt-3 small fw-bold text-uppercase {{ $isCurrent ? '' : 'text-muted' }}" 
@@ -198,16 +196,36 @@
                 <div class="glass-container p-4 mb-4 border-0 shadow-lg">
                     <h5 class="fw-bold mb-4"><i class="bi bi-person-lines-fill me-2 text-primary"></i> {{ __('People Involved') }}</h5>
                     
+                    <!-- Handler Info -->
                     <div class="contact-box p-3 bg-dark-soft rounded-4 mb-4">
                         <div class="d-flex align-items-center mb-2">
                             <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
                                 <i class="bi bi-person-badge"></i>
                             </div>
-                            <h6 class="fw-bold mb-0 text-primary">{{ __('Processed By (Sender)') }}</h6>
+                            <h6 class="fw-bold mb-0 text-primary">{{ __('Handled By') }}</h6>
                         </div>
                         <div class="ps-5">
                             <div class="fw-bold fs-5">{{ $parcel->receiver->name ?? '---' }}</div>
                             <div class="small text-muted">{{ __('System Administrator') }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Sender Info -->
+                    <div class="contact-box p-3 bg-dark-soft rounded-4 mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-sm bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="bi bi-person-up"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0 text-warning">{{ __('Sender (Source)') }}</h6>
+                        </div>
+                        <div class="ps-5">
+                            <div class="fw-bold fs-5">
+                                {{ $parcel->sender_name ?? ($parcel->senderContact ? $parcel->senderContact->name : '---') }}
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-phone me-1"></i> 
+                                {{ $parcel->senderContact ? $parcel->senderContact->phone : '---' }}
+                            </div>
                         </div>
                     </div>
 
@@ -321,6 +339,17 @@
         background-color: var(--primary);
         opacity: 1;
         height: 3px;
+    }
+
+    @keyframes status-glow {
+        0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+        50% { box-shadow: 0 0 20px var(--glow-color, #6366f1); transform: scale(1.05); }
+        100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+    }
+
+    .is-current .timeline-node {
+        animation: status-glow 2s infinite ease-in-out;
+        z-index: 3;
     }
 
     /* Premium Modal Styling */

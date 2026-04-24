@@ -10,17 +10,18 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="fw-bold mb-1" style="color: var(--text-main);">
-                <i class="bi bi-person-lines-fill me-2" style="color: #6366f1;"></i>
-                {{ __('Recipients') }}
+                <i class="bi {{ request('type') == 'sender' ? 'bi-person-up' : 'bi-person-down' }} me-2" style="color: #6366f1;"></i>
+                {{ request('type') == 'sender' ? __('Senders') : __('Recipients') }}
                 <span class="badge rounded-pill ms-2 small" style="background: rgba(99,102,241,0.15); color: #6366f1; font-size: 0.75rem;">
                     {{ $contacts->total() }}
                 </span>
             </h4>
-            <p class="text-muted small mb-0">{{ __('Manage all your parcel recipients') }}</p>
+            <p class="text-muted small mb-0">{{ request('type') == 'sender' ? __('Manage all your parcel senders') : __('Manage all your parcel recipients') }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('contacts.create', ['type' => 'recipient']) }}" class="btn btn-lg rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none;">
-                <i class="bi bi-person-plus-fill me-2"></i> {{ __('Add New Recipient') }}
+            <a href="{{ route('contacts.create', ['type' => request('type', 'sender')]) }}" class="btn btn-lg rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none;">
+                <i class="bi bi-person-plus-fill me-2"></i> 
+                {{ request('type') == 'sender' ? __('Add New Sender') : __('Add New Recipient') }}
             </a>
         </div>
     </div>
@@ -52,7 +53,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr class="small text-uppercase">
-                        <th class="ps-4 py-3 border-0 text-muted">{{ __('Recipient Name') }}</th>
+                        <th class="ps-4 py-3 border-0 text-muted">{{ request('type') == 'sender' ? __('Sender Name') : __('Recipient Name') }}</th>
                         <th class="py-3 border-0 text-muted">{{ __('Phone Number') }}</th>
                         <th class="py-3 border-0 text-muted">{{ __('Address') }}</th>
                         <th class="py-3 border-0 text-muted text-center">{{ __('Total Parcels') }}</th>
@@ -79,7 +80,7 @@
                         </td>
                         <td class="text-center">
                             <span class="badge rounded-pill px-3 py-2" style="background: rgba(99,102,241,0.1); color: #6366f1; font-weight: 700;">
-                                {{ $contact->receivedParcels()->count() }}
+                                {{ request('type') == 'sender' ? $contact->sentParcels()->count() : $contact->receivedParcels()->count() }}
                             </span>
                         </td>
                         <td class="pe-4 text-end">
@@ -106,7 +107,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-5 border-0">
                             <i class="bi bi-people fs-1 text-muted opacity-50 d-block mb-3"></i>
-                            <p class="text-muted mb-2">{{ __('No recipients found') }}</p>
+                            <p class="text-muted mb-2">{{ request('type') == 'sender' ? __('No senders found') : __('No recipients found') }}</p>
                         </td>
                     </tr>
                     @endforelse
@@ -128,6 +129,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // AJAX Delete Logic
     const deleteButtons = document.querySelectorAll('.delete-recipient-btn');
+    const requestType = new URLSearchParams(window.location.search).get('type');
     
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -136,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = this.closest('tr');
             const form = document.getElementById(`delete-form-${id}`);
             
-            window.showConfirm("{{ __('Delete Recipient') }}", `{{ __('Are you sure you want to delete') }} "${name}"?`, async () => {
+            window.showConfirm(requestType === 'sender' ? "{{ __('Delete Sender') }}" : "{{ __('Delete Recipient') }}", `{{ __('Are you sure you want to delete') }} "${name}"?`, async () => {
                 // UI: Loading State
                 row.style.opacity = '0.5';
                 row.style.pointerEvents = 'none';
@@ -162,7 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         row.style.opacity = '0';
                         
                         if (window.showToast) {
-                            window.showToast("{{ __('Success') }}", result.message || "{{ __('Recipient deleted successfully.') }}", 'success');
+                            const msg = requestType === 'sender' ? "{{ __('Sender deleted successfully.') }}" : "{{ __('Recipient deleted successfully.') }}";
+                            window.showToast("{{ __('Success') }}", result.message || msg, 'success');
                         }
                         
                         setTimeout(() => row.remove(), 500);
