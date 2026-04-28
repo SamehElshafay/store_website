@@ -102,7 +102,7 @@
             <div class="glass-container p-4 border-0 shadow-lg">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h5 class="fw-bold mb-0 text-main"><i class="bi bi-clock-history me-2 opacity-50"></i>{{ __('Recent Movements') }}</h5>
-                    <a href="{{ route('parcels.index') }}" class="btn btn-link btn-sm text-decoration-none fw-bold small p-0">{{ __('View Full Log') }} &rarr;</a>
+                    {{-- <a href="{{ route('parcels.index') }}" class="btn btn-link btn-sm text-decoration-none fw-bold small p-0">{{ __('View Full Log') }} &rarr;</a> --}}
                 </div>
 
                 {{-- Status Update Modal (Moved to Top for better stability) --}}
@@ -215,11 +215,11 @@
                                     $isDefault = $defaultStatus && $parcel->status_id == $defaultStatus->id;
                                 @endphp
 
-                                @if($isDefault)
+                                {{-- @if($isDefault)
                                 <button onclick="event.preventDefault(); event.stopPropagation(); openDispatchModal({{ $parcel->id }})" class="btn btn-dispatch rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="{{ __('Dispatch Parcel') }}">
                                     <i class="bi bi-truck"></i>
                                 </button>
-                                @endif
+                                @endif --}}
                                 <a href="/parcels/{{ $parcel->id }}" class="btn btn-dark-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
                                     <i class="bi bi-eye"></i>
                                 </a>

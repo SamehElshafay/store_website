@@ -132,21 +132,21 @@
                             <div class="p-3 bg-dark-soft rounded-4 text-center">
                                 <div class="small text-muted text-uppercase mb-1">{{ __('Delivery Price') }}</div>
                                 <div class="fw-800 fs-4">{{ number_format($parcel->delivery_price, 2) }}</div>
-                                <small class="text-muted">EGP</small>
+                                <small class="text-muted">₪</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 bg-dark-soft rounded-4 text-center">
                                 <div class="small text-muted text-uppercase mb-1">{{ __('Collection') }} (COD)</div>
                                 <div class="fw-800 fs-4 text-success">{{ number_format($parcel->collection_amount, 2) }}</div>
-                                <small class="text-muted">EGP</small>
+                                <small class="text-muted">₪</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 bg-primary-soft rounded-4 text-center border border-primary border-opacity-10">
                                 <div class="small text-primary text-uppercase mb-1">{{ __('Net Collection') }}</div>
                                 <div class="fw-800 fs-4 premium-text text-primary">{{ number_format($parcel->net_collection, 2) }}</div>
-                                <small class="text-muted">EGP</small>
+                                <small class="text-muted">₪</small>
                             </div>
                         </div>
                     </div>
