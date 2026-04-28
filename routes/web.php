@@ -40,3 +40,23 @@ Route::middleware('auth')->group(function () {
     Route::post('parcel-statuses/{id}/toggle-modal', [\App\Http\Controllers\ParcelStatusController::class, 'toggleModal'])->name('parcel-statuses.toggle-modal');
 
 });
+
+// Cache Clearing Route for Shared Hosting (Namecheap)
+Route::get('/clear-all-cache', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return "تم تنظيف كل الكاش على السيرفر بنجاح!";
+});
+
+// Debug Route to check Server and DB time
+Route::get('/check-server-time', function() {
+    $phpTime = now()->toDateTimeString();
+    $dbTime = \Illuminate\Support\Facades\DB::select("SELECT NOW() as now")[0]->now;
+    $timezone = config('app.timezone');
+    
+    return [
+        'PHP Current Time' => $phpTime,
+        'Database Current Time' => $dbTime,
+        'Laravel Config Timezone' => $timezone,
+        'PHP System Timezone' => date_default_timezone_get(),
+    ];
+});
