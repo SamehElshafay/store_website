@@ -96,9 +96,10 @@
                                 <div class="row g-3 align-items-center">
                                     @foreach ($parcel_statuses as $ps)
                                     <div class="col-auto">
-                                        <label class="d-flex align-items-center gap-2 p-3 rounded-3 border cursor-pointer"
-                                            style="background: {{ $settings['default_dispatch_status_id'] == $ps->id ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)' }};
-                                                   border-color: {{ $settings['default_dispatch_status_id'] == $ps->id ? '#6366f1' : 'rgba(255,255,255,0.1)' }} !important;
+                                        <label class="d-flex align-items-center gap-2 p-3 rounded-3 border cursor-pointer dispatch-status-label"
+                                            style="background: {{ $settings['default_dispatch_status_id'] == $ps->id ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)' }};
+                                                   border-color: {{ $settings['default_dispatch_status_id'] == $ps->id ? '#6366f1' : 'rgba(255,255,255,0.1)' }};
+                                                   transform: {{ $settings['default_dispatch_status_id'] == $ps->id ? 'scale(1.05)' : 'scale(1)' }};
                                                    cursor: pointer; transition: all 0.2s;">
                                             <input type="radio" name="default_dispatch_status_id"
                                                    value="{{ $ps->id }}"
@@ -109,6 +110,9 @@
                                                 <i class="bi {{ $ps->icon ?? 'bi-circle' }} me-1"></i>
                                                 {{ $ps->display_name }}
                                             </span>
+                                            @if($settings['default_dispatch_status_id'] == $ps->id)
+                                                <i class="bi bi-check-circle-fill active-check ms-2 text-primary"></i>
+                                            @endif
                                         </label>
                                     </div>
                                     @endforeach
@@ -236,20 +240,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Dispatch Status Radio Cards — visual interaction
     document.querySelectorAll('.dispatch-status-radio').forEach(radio => {
-        const label = radio.closest('label');
-        radio.addEventListener('change', () => {
-            // Reset all
-            document.querySelectorAll('.dispatch-status-radio').forEach(r => {
-                const l = r.closest('label');
+        radio.addEventListener('change', function() {
+            // 1. Reset all labels
+            document.querySelectorAll('.dispatch-status-label').forEach(l => {
                 l.style.background = 'rgba(255,255,255,0.03)';
                 l.style.borderColor = 'rgba(255,255,255,0.1)';
+                l.style.transform = 'scale(1)';
+                // Remove existing checkmark if any
+                const existingCheck = l.querySelector('.active-check');
+                if (existingCheck) existingCheck.remove();
             });
-            // Highlight selected
-            label.style.background = 'rgba(99,102,241,0.12)';
-            label.style.borderColor = '#6366f1';
+
+            // 2. Highlight selected
+            if (this.checked) {
+                const label = this.closest('.dispatch-status-label');
+                label.style.background = 'rgba(99,102,241,0.2)';
+                label.style.borderColor = '#6366f1';
+                label.style.transform = 'scale(1.05)';
+
+                // Add checkmark icon
+                const check = document.createElement('i');
+                check.className = 'bi bi-check-circle-fill active-check ms-2 text-primary';
+                label.appendChild(check);
+
+                // Show toast notification
+                const statusName = label.querySelector('.badge').innerText.trim();
+                if (window.showToast) {
+                    window.showToast("{{ __('Selected') }}", statusName, 'success');
+                }
+            }
         });
-        // Clicking the label should select the radio
-        label.addEventListener('click', () => radio.checked = true);
     });
 });
 
