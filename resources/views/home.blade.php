@@ -15,10 +15,10 @@
                     <p class="text-muted fs-5 mb-0">{{ __('Smart Warehouse Management System Overview') }}</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-premium rounded-pill px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#receiveModal">
+                    <button class="btn btn-outline-premium rounded-pill px-4 py-2 shadow-sm" onclick="window.openReceiveModal()">
                         <i class="bi bi-box-arrow-in-down me-2"></i> {{ __('Receive Parcel') }}
                     </button>
-                    <button class="btn btn-premium rounded-pill px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#deliverModal">
+                    <button class="btn btn-premium rounded-pill px-4 py-2 shadow-sm" onclick="window.openDispatchModal()">
                         <i class="bi bi-box-arrow-up-right me-2"></i> {{ __('Register Outgoing Parcel') }}
                     </button>
                 </div>
@@ -159,7 +159,7 @@
                                     <i class="bi bi-box"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-slate-800">{{ $parcel->title }}</div>
+                                    <div class="fw-bold text-slate-800">{{ $parcel->title ?? __('Untitled Parcel') }}</div>
                                     <small class="text-muted">{{ __('ID') }}: #{{ $parcel->id }}</small>
                                 </div>
                             </div>
@@ -223,6 +223,9 @@
                                 <a href="/parcels/{{ $parcel->id }}" class="btn btn-dark-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                <button onclick="event.preventDefault(); event.stopPropagation(); window.openParcelEditModal({{ $parcel->id }}, '{{ $parcel->statusModel->modal_type ?? 'receive' }}', this)" class="btn btn-primary-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('Edit Parcel') }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -244,98 +247,7 @@
     </div>
 </div>
 
-<!-- Receive Modal (Upgraded Design) -->
-<div class="modal fade" id="receiveModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content glass-modal border-0 shadow-lg overflow-hidden">
-            <div class="modal-header border-0 p-4 pb-0">
-                <h4 class="modal-title fw-bold text-main d-flex align-items-center">
-                    <i class="bi bi-box-seam me-2 text-primary"></i>
-                    {{ __('Receive Parcel') }}
-                </h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="receiveForm">
-                @csrf
-                <div class="modal-body p-4 pt-0">
-                    <div class="mb-4 bg-primary bg-opacity-10 p-3 rounded-4">
-                        <p class="small text-primary mb-0 fw-bold"><i class="bi bi-info-circle me-1"></i> {{ __('Register a new parcel arriving at the warehouse.') }}</p>
-                    </div>
-
-                    <div class="row g-4">
-                        {{-- Left Column --}}
-                        <div class="col-lg-6">
-                            <div class="glass-card p-3 rounded-4 h-100 border-0 shadow-sm" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05) !important;">
-                                <h6 class="small fw-bold text-uppercase text-primary mb-3">{{ __('Parcel Content & Source') }}</h6>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Parcel Title / Item Name') }} <span class="text-danger">*</span></label>
-                                        <input type="text" name="title" class="form-control border-0 bg-dark-soft text-main" placeholder="e.g. Samsung Galaxy S24" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Scan In (Barcode)') }} <span class="text-danger">*</span></label>
-                                        <input type="text" name="barcode_in" class="form-control border-0 bg-dark-soft text-main" placeholder="Scan barcode..." required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Invoice Number') }}</label>
-                                        <input type="text" name="invoice_number" class="form-control border-0 bg-dark-soft text-main" placeholder="INV-XXXXX">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted mb-2">{{ __('Sender (Source)') }} <span class="text-danger">*</span></label>
-                                        <div class="custom-search-select has-search" id="senderSelectReceive">
-                                            <input type="hidden" name="sender_contact_id" required>
-                                            <input type="text" class="form-control border-0 bg-dark-soft search-input text-main" placeholder="{{ __('Search senders...') }}" autocomplete="off">
-                                            <div class="dropdown-results shadow-lg border-0 rounded-3 results-hidden"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted mb-2">{{ __('Recipient (Destination)') }} <span class="text-danger">*</span></label>
-                                        <div class="custom-search-select has-search" id="recipientSelectReceive">
-                                            <input type="hidden" name="recipient_contact_id" required>
-                                            <input type="text" class="form-control border-0 bg-dark-soft search-input text-main" placeholder="{{ __('Search recipients...') }}" autocomplete="off">
-                                            <div class="dropdown-results shadow-lg border-0 rounded-3 results-hidden"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Right Column --}}
-                        <div class="col-lg-6">
-                            <div class="glass-card p-3 rounded-4 h-100 border-0 shadow-sm" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05) !important;">
-                                <h6 class="small fw-bold text-uppercase text-primary mb-3">{{ __('Logistics & Timeline') }}</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Booking Date') }}</label>
-                                        <input type="date" name="booking_date" class="form-control border-0 bg-dark-soft text-main">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Delivery Date (Est.)') }}</label>
-                                        <input type="date" name="delivery_date" class="form-control border-0 bg-dark-soft text-main">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Collection Barcode') }}</label>
-                                        <input type="text" name="barcode_collection" class="form-control border-0 bg-dark-soft text-main" placeholder="COLL-XXXXX">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted">{{ __('Additional Notes') }}</label>
-                                        <textarea name="notes" class="form-control border-0 bg-dark-soft text-main" rows="3" placeholder="{{ __('Any additional notes...') }}"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-lg btn-link text-muted text-decoration-none px-4" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                    <button type="submit" class="btn btn-premium rounded-pill px-5 py-2 fw-bold shadow-lg">
-                        <i class="bi bi-check2-circle me-1"></i> {{ __('Submit Entry') }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('parcels.partials.receive_modal')
 
 
 {{-- Quick Status Update Modal --}}
@@ -939,53 +851,7 @@ document.addEventListener('DOMContentLoaded', function() {
         collectionInput.addEventListener('input', calc);
     }
 
-    // Receive Form Submission
-    const receiveForm = document.getElementById('receiveForm');
-    if (receiveForm) {
-        receiveForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> {{ __('Saving...') }}`;
-            btn.disabled = true;
 
-            const formData = new FormData(this);
-            const data = {};
-            formData.forEach((value, key) => {
-                if(value && key !== '_token') data[key] = value;
-            });
-
-            fetch('/parcels', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(data)
-            })
-            .then(async res => {
-                const result = await res.json();
-                if (res.ok) {
-                    showToast("{{ __('Success') }}", result.message, 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    let details = '';
-                    if (result.errors) {
-                        details = Object.values(result.errors).flat().join('<br>');
-                    }
-                    showToast("{{ __('Failed') }}", result.message || "{{ __('Validation Error') }}", 'error', details);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                showToast("{{ __('Error') }}", "{{ __('System Error occurred') }}", 'error');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        });
-    }
 
     // Net Collection calculation for both modals
     function setupNetCollection(prefix = '') {
@@ -1468,6 +1334,55 @@ document.getElementById('statusUpdateForm').addEventListener('submit', function(
 #statusUpdateModal .modal-header .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
+
+.btn-dark-soft, .btn-primary-soft {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.btn-dark-soft {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: var(--text-main) !important;
+    border: none !important;
+}
+
+[data-theme="dark"] .btn-dark-soft {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: white !important;
+}
+
+.btn-primary-soft {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: #6366f1 !important;
+    border: none !important;
+}
+
+.btn-dark-soft:hover, .btn-primary-soft:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+}
+
+.btn-primary-soft:hover {
+    background: #6366f1 !important;
+    color: white !important;
+}
+
+.btn-dark-soft:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .btn-dark-soft:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.btn-dark-soft:active, .btn-primary-soft:active {
+    transform: translateY(-1px) scale(0.95);
+}
+
+.btn-primary-soft .spinner-border {
+    width: 1rem;
+    height: 1rem;
+}
 </style>
 
 <script>
@@ -1494,5 +1409,8 @@ document.getElementById('statusUpdateForm').addEventListener('submit', function(
 })();
 </script>
 </div>
+@include('parcels.partials.receive_modal')
+@include('parcels.partials.receive_scripts')
 @include('parcels.partials.dispatch_modal')
+@include('parcels.partials.dispatch_scripts')
 @endsection

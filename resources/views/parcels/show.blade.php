@@ -14,7 +14,7 @@
                     </ol>
                 </nav>
                 <h2 class="fw-800 display-5 mb-0">
-                    {{ $parcel->title }} <span class="premium-text">#{{ $parcel->id }}</span>
+                    {{ $parcel->title ?? __('Untitled Parcel') }} <span class="premium-text">#{{ $parcel->id }}</span>
                 </h2>
             </div>
             <div class="d-flex gap-2">

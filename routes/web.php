@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::get('parcels/find/{barcode}', [App\Http\Controllers\Api\ParcelController::class, 'findByBarcode'])->name('parcels.find');
     Route::get('parcels/{id}/json', [App\Http\Controllers\Api\ParcelController::class, 'show'])->name('parcels.json');
     Route::post('parcels', [App\Http\Controllers\Api\ParcelController::class, 'store']);
+    Route::put('parcels/{id}', [App\Http\Controllers\Api\ParcelController::class, 'update'])->name('parcels.update');
     Route::post('parcels/{id}/deliver', [App\Http\Controllers\Api\ParcelController::class, 'deliver']);
     Route::post('parcels/{id}/status', [App\Http\Controllers\Api\ParcelController::class, 'updateStatus'])->name('parcels.status.update');
     Route::post('parcels/bulk-status', [App\Http\Controllers\Api\ParcelController::class, 'bulkUpdateStatus'])->name('parcels.bulk.status');
@@ -38,6 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::post('parcel-statuses/reorder', [\App\Http\Controllers\ParcelStatusController::class, 'reorder'])->name('parcel-statuses.reorder');
     Route::post('parcel-statuses/{id}/default', [\App\Http\Controllers\ParcelStatusController::class, 'setDefault'])->name('parcel-statuses.default');
     Route::post('parcel-statuses/{id}/toggle-modal', [\App\Http\Controllers\ParcelStatusController::class, 'toggleModal'])->name('parcel-statuses.toggle-modal');
+
+    // Settings
+    Route::get('settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::post('settings/defaults', [App\Http\Controllers\SettingsController::class, 'updateDefaults'])->name('settings.defaults.update');
 
 });
 

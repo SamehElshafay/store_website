@@ -158,6 +158,11 @@
             color-scheme: dark;
         }
 
+        [data-theme="dark"] .form-select option {
+            background-color: #1a1a2e !important;
+            color: #fff !important;
+        }
+
         [data-theme="dark"] .form-control::placeholder {
             color: rgba(255, 255, 255, 0.45) !important;
         }
@@ -212,6 +217,169 @@
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
             color: white !important;
         }
+
+        .bg-dark-soft {
+            background: rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="dark"] .bg-dark-soft {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .btn-dark-soft {
+            background: rgba(0, 0, 0, 0.05) !important;
+            color: var(--text-main) !important;
+            border: none !important;
+            transition: all 0.3s;
+        }
+
+        .custom-search-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 9999 !important;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+
+        [data-theme="dark"] .dropdown-results {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .results-hidden {
+            display: none !important;
+        }
+
+        .result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] .result-item {
+            border-bottom-color: rgba(255,255,255,0.05);
+        }
+
+        .result-item:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .result-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .add-new-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(99, 102, 241, 0.05);
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .add-new-btn:hover {
+            background: #6366f1;
+            color: white;
+        }
+
+        .custom-search-select.has-search .search-input {
+            padding-right: 40px !important;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            z-index: 5;
+        }
+
+        .search-clear-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        [data-theme="light"] .search-clear-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-search-select.has-value .search-clear-btn {
+            display: flex;
+        }
+
+        .search-icon-left {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .custom-search-select.has-icon-left .search-input {
+            padding-left: 38px !important;
+        }
+
+        [data-theme="dark"] .btn-dark-soft {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: white !important;
+        }
+
+        .btn-dark-soft:hover {
+            background: rgba(0, 0, 0, 0.1) !important;
+            transform: translateY(-2px);
+        }
+
+        [data-theme="dark"] .btn-dark-soft:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .bg-primary-soft { background-color: rgba(99, 102, 241, 0.1) !important; }
+        .bg-success-soft { background-color: rgba(16, 185, 129, 0.1) !important; }
+        .bg-warning-soft { background-color: rgba(245, 158, 11, 0.1) !important; }
+        .bg-danger-soft { background-color: rgba(239, 68, 68, 0.1) !important; }
     </style>
 
     <script>
@@ -236,9 +404,160 @@
             }
         }
 
+        window.defaultSettings = {
+            receive: {
+                sender_id: "{{ \App\Models\Setting::get('default_receive_sender_id') }}",
+                sender_name: "{{ \App\Models\Contact::find(\App\Models\Setting::get('default_receive_sender_id'))->name ?? '' }}",
+                recipient_id: "{{ \App\Models\Setting::get('default_receive_recipient_id') }}",
+                recipient_name: "{{ \App\Models\Contact::find(\App\Models\Setting::get('default_receive_recipient_id'))->name ?? '' }}",
+            },
+            dispatch: {
+                sender_id: "{{ \App\Models\Setting::get('default_dispatch_sender_id') }}",
+                sender_name: "{{ \App\Models\Contact::find(\App\Models\Setting::get('default_dispatch_sender_id'))->name ?? '' }}",
+                recipient_id: "{{ \App\Models\Setting::get('default_dispatch_recipient_id') }}",
+                recipient_name: "{{ \App\Models\Contact::find(\App\Models\Setting::get('default_dispatch_recipient_id'))->name ?? '' }}",
+            }
+        };
+
         window.addEventListener('DOMContentLoaded', () => {
             updateThemeIcon(localStorage.getItem('theme') || 'light');
         });
+
+        // Global Utility Functions
+        window.showConfirm = function(title, message, onConfirm) {
+            const modal = document.getElementById('premium-confirm-modal');
+            const titleEl = modal.querySelector('.modal-title');
+            const messageEl = modal.querySelector('.modal-message');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            if(!modal || !titleEl || !messageEl || !confirmBtn || !cancelBtn) return;
+
+            titleEl.innerText = title;
+            messageEl.innerText = message;
+            modal.classList.remove('d-none');
+            const closeModal = () => modal.classList.add('d-none');
+            confirmBtn.onclick = () => { onConfirm(); closeModal(); };
+            cancelBtn.onclick = closeModal;
+            modal.onclick = (e) => { if(e.target === modal) closeModal(); };
+        };
+
+        window.showToast = function(title, msg, type = 'success', details = null) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-premium ${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
+            let detailsHtml = '';
+            if (details) {
+                detailsHtml = `<i class="bi bi-info-circle toast-info-trigger" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"></i><div class="error-details-popup">${details}</div>`;
+            }
+            toast.innerHTML = `<div class="toast-icon"><i class="bi ${icon}"></i></div><div class="toast-content"><div class="toast-title">${title} ${detailsHtml}</div><div class="toast-msg">${msg}</div></div>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        };
+
+        window.initSearchSelect = function(id, type) {
+            const wrapper = document.getElementById(id);
+            if(!wrapper) return;
+            
+            if (!wrapper.querySelector('.search-clear-btn')) {
+                const clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'search-clear-btn';
+                clearBtn.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+                wrapper.appendChild(clearBtn);
+
+                const searchIcon = document.createElement('i');
+                searchIcon.className = 'bi bi-search search-icon-left';
+                wrapper.appendChild(searchIcon);
+                wrapper.classList.add('has-icon-left');
+            }
+
+            const input = wrapper.querySelector('.search-input');
+            const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+            const resultsDiv = wrapper.querySelector('.dropdown-results');
+            const clearBtn = wrapper.querySelector('.search-clear-btn');
+
+            if(!input || !resultsDiv) return;
+            if (hiddenInput.value) wrapper.classList.add('has-value');
+
+            let timeout = null;
+            const updateUI = (query) => {
+                const trimmed = query.trim();
+                if (trimmed.length === 0) {
+                    resultsDiv.classList.add('results-hidden');
+                    resultsDiv.innerHTML = '';
+                    wrapper.classList.remove('has-value');
+                    hiddenInput.value = '';
+                    return;
+                }
+                wrapper.classList.add('has-value');
+                const createText = type === 'sender' ? "{{ __('Create New Sender') }}" : "{{ __('Create New Recipient') }}";
+                const addBtnHtml = `<a href="/contacts/create?type=${type}&name=${encodeURIComponent(trimmed)}" class="add-new-btn"><i class="bi bi-plus-circle-fill"></i> ${createText}: <span class="ms-1 fw-800">${trimmed}</span></a>`;
+                resultsDiv.innerHTML = `<div class="records-area"><div class="p-3 text-center"><div class="spinner-border spinner-border-sm text-primary"></div></div></div>` + addBtnHtml;
+                resultsDiv.classList.remove('results-hidden');
+            };
+
+            async function fetchResults(query) {
+                const trimmed = query.trim();
+                if (trimmed.length === 0) return;
+                try {
+                    const response = await fetch(`/contacts-search?q=${encodeURIComponent(trimmed)}`, { headers: { 'Accept': 'application/json' } });
+                    const data = await response.json();
+                    const limitedData = data.slice(0, 10);
+                    const recordsArea = resultsDiv.querySelector('.records-area');
+                    if (!recordsArea) return;
+                    let html = '';
+                    if (limitedData.length > 0) {
+                        limitedData.forEach(item => {
+                            const tLabel = item.type === 'sender' ? "{{ __('Sender') }}" : "{{ __('Recipient') }}";
+                            const tClass = item.type === 'sender' ? "bg-primary-soft text-primary" : "bg-success-soft text-success";
+                            html += `<div class="result-item" data-id="${item.id}" data-name="${item.name}"><div class="result-icon"><i class="bi bi-person-fill"></i></div><div class="flex-grow-1 text-start"><div class="d-flex align-items-center justify-content-between mb-1"><div class="fw-bold text-main">${item.name}</div><span class="badge ${tClass} border-0 px-2 py-1 rounded-pill" style="font-size: 0.65rem !important;">${tLabel}</span></div><div class="small text-muted opacity-75">${item.phone || ''}</div></div><i class="bi bi-chevron-right small opacity-25"></i></div>`;
+                        });
+                    } else {
+                        html = `<div class="p-3 text-center small text-muted opacity-50">{{ __('No records found') }}</div>`;
+                    }
+                    recordsArea.innerHTML = html;
+                    recordsArea.querySelectorAll('.result-item').forEach(el => {
+                        el.addEventListener('click', () => {
+                            input.value = el.getAttribute('data-name');
+                            hiddenInput.value = el.getAttribute('data-id');
+                            resultsDiv.classList.add('results-hidden');
+                            wrapper.classList.add('has-value');
+                        });
+                    });
+                } catch (err) { console.error("Search failed:", err); }
+            }
+
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                updateUI(val);
+                clearTimeout(timeout);
+                if (val.trim().length > 0) timeout = setTimeout(() => fetchResults(val), 300);
+            });
+
+            input.addEventListener('focus', () => {
+                const val = input.value.trim();
+                if (val.length > 0) { updateUI(val); fetchResults(val); }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    input.value = ''; hiddenInput.value = '';
+                    wrapper.classList.remove('has-value');
+                    resultsDiv.classList.add('results-hidden');
+                    input.focus();
+                });
+            }
+
+            document.addEventListener('click', (e) => { if (!wrapper.contains(e.target)) resultsDiv.classList.add('results-hidden'); });
+        };
     </script>
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -297,6 +616,11 @@
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ request()->routeIs('parcel-statuses.*') ? 'active' : '' }}" href="{{ route('parcel-statuses.index') }}">
                                 <i class="bi bi-gear me-1"></i> {{ __('Statuses') }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
+                                <i class="bi bi-sliders me-1"></i> {{ __('Settings') }}
                             </a>
                         </li>
                         @endauth
@@ -440,61 +764,7 @@
     </style>
 
     <script>
-        window.showConfirm = function(title, message, onConfirm) {
-            const modal = document.getElementById('premium-confirm-modal');
-            const titleEl = modal.querySelector('.modal-title');
-            const messageEl = modal.querySelector('.modal-message');
-            const confirmBtn = document.getElementById('modal-confirm-btn');
-            const cancelBtn = document.getElementById('modal-cancel-btn');
-
-            titleEl.innerText = title;
-            messageEl.innerText = message;
-            modal.classList.remove('d-none');
-
-            const closeModal = () => modal.classList.add('d-none');
-
-            // Handle confirm
-            confirmBtn.onclick = () => {
-                onConfirm();
-                closeModal();
-            };
-
-            // Handle cancel
-            cancelBtn.onclick = closeModal;
-            modal.onclick = (e) => { if(e.target === modal) closeModal(); };
-        };
-
-        window.showToast = function(title, msg, type = 'success', details = null) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast-premium ${type}`;
-            
-            const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
-            
-            let detailsHtml = '';
-            if (details) {
-                detailsHtml = `
-                    <i class="bi bi-info-circle toast-info-trigger" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"></i>
-                    <div class="error-details-popup">${details}</div>
-                `;
-            }
-
-            toast.innerHTML = `
-                <div class="toast-icon"><i class="bi ${icon}"></i></div>
-                <div class="toast-content">
-                    <div class="toast-title">${title} ${detailsHtml}</div>
-                    <div class="toast-msg">${msg}</div>
-                </div>
-            `;
-
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                toast.style.transition = 'all 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        };
+        // Bottom scripts if needed
     </script>
     @include('parcels.partials.dispatch_modal')
     @stack('modals')

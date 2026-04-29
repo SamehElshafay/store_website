@@ -113,7 +113,7 @@ class ParcelController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'barcode_in' => 'required|string|unique:parcels,barcode_in',
             'barcode_collection' => 'nullable|string|max:255',
             'sender_contact_id' => 'required|exists:contacts,id',
@@ -150,6 +150,36 @@ class ParcelController extends Controller
             'message' => __('Outgoing parcel registered successfully'),
             'data' => $parcel
         ], 201);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $parcel = Parcel::findOrFail($id);
+        
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'barcode_in' => 'required|string|unique:parcels,barcode_in,' . $parcel->id,
+            'barcode_collection' => 'nullable|string|max:255',
+            'sender_contact_id' => 'required|exists:contacts,id',
+            'recipient_contact_id' => 'required|exists:contacts,id',
+            'delivery_price' => 'nullable|numeric|min:0',
+            'collection_amount' => 'nullable|numeric|min:0',
+            'net_collection' => 'nullable|numeric',
+            'invoice_number' => 'nullable|string|max:255',
+            'collection_method' => 'nullable|in:cash,card,transfer,none',
+            'service_type' => 'nullable|string|max:255',
+            'booking_date' => 'nullable|date',
+            'delivery_date' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $parcel->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Parcel updated successfully'),
+            'data' => $parcel
+        ]);
     }
 
     /**

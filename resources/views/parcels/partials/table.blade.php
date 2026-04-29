@@ -33,7 +33,7 @@
                             <i class="bi bi-box-seam"></i>
                         </div>
                         <div>
-                            <div class="fw-bold text-main">{{ $parcel->title }}</div>
+                            <div class="fw-bold text-main">{{ $parcel->title ?? __('Untitled Parcel') }}</div>
                             <div class="small text-muted opacity-75 font-monospace">{{ $parcel->barcode_in }}</div>
                         </div>
                     </div>
@@ -69,6 +69,9 @@
                         <a href="{{ route('parcels.show', $parcel->id) }}" class="btn btn-dark-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('View Details') }}">
                             <i class="bi bi-eye"></i>
                         </a>
+                        <button onclick="event.preventDefault(); event.stopPropagation(); window.openParcelEditModal({{ $parcel->id }}, '{{ $parcel->statusModel->modal_type ?? 'receive' }}', this)" class="btn btn-primary-soft rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" data-bs-toggle="tooltip" title="{{ __('Edit Parcel') }}">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
                     </div>
                 </td>
             </tr>

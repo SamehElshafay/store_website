@@ -139,16 +139,14 @@ class ContactController extends Controller
      */
     public function search(Request $request)
     {
-        $type = $request->get('type');
         $q    = $request->get('q', '');
 
-        $results = Contact::when($type, fn($query) => $query->where('type', $type))
-            ->where(function ($query) use ($q) {
+        $results = Contact::where(function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
                       ->orWhere('phone', 'like', "%{$q}%");
             })
             ->limit(10)
-            ->get(['id', 'name', 'phone', 'address', 'city']);
+            ->get(['id', 'name', 'phone', 'address', 'city', 'type']);
 
         return response()->json($results);
     }

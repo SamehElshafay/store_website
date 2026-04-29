@@ -36,7 +36,7 @@
                                                     class="bi bi-upc-scan"></i></span>
                                             <input type="text" name="barcode_in"
                                                 class="form-control border-0 bg-dark-soft text-main"
-                                                placeholder="Original barcode..." required>
+                                                placeholder="{{ __('Original barcode...') }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -48,7 +48,7 @@
                                                     class="bi bi-barcode"></i></span>
                                             <input type="text" name="barcode_collection"
                                                 class="form-control border-0 bg-dark-soft text-main"
-                                                placeholder="Cashier barcode...">
+                                                placeholder="{{ __('Cashier barcode...') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -75,11 +75,10 @@
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <label
-                                            class="form-label small fw-bold text-muted">{{ __('Parcel Title / Description') }}
-                                            <span class="text-danger">*</span></label>
+                                            class="form-label small fw-bold text-muted">{{ __('Parcel Title / Description') }}</label>
                                         <input type="text" name="title"
                                             class="form-control border-0 bg-dark-soft text-main"
-                                            placeholder="e.g. iPhone 15 Pro, Medical Box..." required>
+                                            placeholder="{{ __('e.g. iPhone 15 Pro, Medical Box...') }}">
                                     </div>
                                     <div class="col-12">
                                         <label
@@ -174,7 +173,7 @@
                                         <label
                                             class="form-label small fw-bold text-muted">{{ __('Additional Notes') }}</label>
                                         <textarea name="notes" class="form-control border-0 bg-dark-soft text-main"
-                                            rows="3" placeholder="Any specific delivery instructions..."></textarea>
+                                            rows="3" placeholder="{{ __('Any specific delivery instructions...') }}"></textarea>
                                     </div>
                                 </div>
                             </div>

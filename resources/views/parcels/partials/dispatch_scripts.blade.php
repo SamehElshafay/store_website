@@ -3,104 +3,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const b = window.bootstrap || bootstrap;
 
-    // Helper: Initialize Search Select (Bulletproof)
-    function initSearchSelect(id, type) {
-        const wrapper = document.getElementById(id);
-        if(!wrapper) return;
-        
-        const input = wrapper.querySelector('.search-input');
-        const hiddenInput = wrapper.querySelector('input[type="hidden"]');
-        const resultsDiv = wrapper.querySelector('.dropdown-results');
-
-        if(!input || !resultsDiv) return;
-
-        let timeout = null;
-        let selectedIndex = -1;
-
-        const updateUI = (query) => {
-            const trimmed = query.trim();
-            if (trimmed.length === 0) {
-                resultsDiv.classList.add('results-hidden');
-                resultsDiv.innerHTML = '';
-                return;
-            }
-
-            const createText = type === 'sender' ? "{{ __('Create New Sender') }}" : "{{ __('Create New Recipient') }}";
-            const addBtnHtml = `<a href="/contacts/create?type=${type}&name=${encodeURIComponent(trimmed)}" class="add-new-btn"><i class="bi bi-plus-circle-fill"></i> ${createText}: <span class="ms-1 fw-800">${trimmed}</span></a>`;
-            
-            resultsDiv.innerHTML = `<div class="records-area"><div class="p-3 text-center"><div class="spinner-border spinner-border-sm text-primary"></div></div></div>` + addBtnHtml;
-            resultsDiv.classList.remove('results-hidden');
-        };
-
-        async function fetchResults(query) {
-            const trimmed = query.trim();
-            if (trimmed.length === 0) return;
-
-            try {
-                const response = await fetch(`/contacts-search?type=${type}&q=${encodeURIComponent(trimmed)}`, {
-                    headers: { 'Accept': 'application/json' }
-                });
-                const data = await response.json();
-                
-                const limitedData = data.slice(0, 10);
-                const recordsArea = resultsDiv.querySelector('.records-area');
-                if (!recordsArea) return;
-
-                let html = '';
-                if (limitedData.length > 0) {
-                    limitedData.forEach(item => {
-                        html += `
-                            <div class="result-item" data-id="${item.id}" data-name="${item.name}">
-                                <div class="result-icon"><i class="bi bi-person-fill"></i></div>
-                                <div class="flex-grow-1 text-start">
-                                    <div class="fw-bold text-main">${item.name}</div>
-                                    <div class="small text-muted opacity-75">${item.phone || ''}</div>
-                                </div>
-                                <i class="bi bi-chevron-right small opacity-25"></i>
-                            </div>
-                        `;
-                    });
-                } else {
-                    html = `<div class="p-3 text-center small text-muted opacity-50">{{ __('No records found') }}</div>`;
-                }
-                
-                recordsArea.innerHTML = html;
-                
-                recordsArea.querySelectorAll('.result-item').forEach(el => {
-                    el.addEventListener('click', () => {
-                        input.value = el.getAttribute('data-name');
-                        hiddenInput.value = el.getAttribute('data-id');
-                        resultsDiv.classList.add('results-hidden');
-                    });
-                });
-            } catch (err) {
-                console.error("Search fetch failed:", err);
-            }
-        }
-
-        input.addEventListener('input', function() {
-            const query = this.value;
-            updateUI(query);
-            clearTimeout(timeout);
-            if (query.trim().length > 0) {
-                timeout = setTimeout(() => fetchResults(query), 300);
-            }
-        });
-
-        input.addEventListener('focus', function() {
-            if (this.value.trim().length > 0) {
-                updateUI(this.value);
-                fetchResults(this.value);
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                resultsDiv.classList.add('results-hidden');
-            }
-        });
-    }
-
     // Helper: Fill Dispatch Form
     window.fillDispatchForm = function(parcel) {
         const form = document.getElementById('deliverForm');
@@ -122,12 +24,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 select.querySelector('input[type="hidden"]').value = parcel.sender_contact_id;
                 select.querySelector('.search-input').value = parcel.sender_name || (parcel.sender_contact ? parcel.sender_contact.name : '');
             }
+        } else if (window.defaultSettings && window.defaultSettings.dispatch && window.defaultSettings.dispatch.sender_id) {
+            const def = window.defaultSettings.dispatch;
+            const select = document.getElementById('senderSelectDeliver');
+            if (select) {
+                select.querySelector('input[type="hidden"]').value = def.sender_id;
+                select.querySelector('.search-input').value = def.sender_name;
+            }
         }
+
         if (parcel.recipient_contact_id) {
             const select = document.getElementById('recipientSelectDeliver');
             if (select) {
                 select.querySelector('input[type="hidden"]').value = parcel.recipient_contact_id;
                 select.querySelector('.search-input').value = parcel.recipient_name || (parcel.recipient_contact ? parcel.recipient_contact.name : '');
+            }
+        } else if (window.defaultSettings && window.defaultSettings.dispatch && window.defaultSettings.dispatch.recipient_id) {
+            const def = window.defaultSettings.dispatch;
+            const select = document.getElementById('recipientSelectDeliver');
+            if (select) {
+                select.querySelector('input[type="hidden"]').value = def.recipient_id;
+                select.querySelector('.search-input').value = def.recipient_name;
             }
         }
         
@@ -137,11 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Initialize Modal Search Selects
-    initSearchSelect('senderSelectDeliver', 'sender');
-    initSearchSelect('recipientSelectDeliver', 'recipient');
+    if (window.initSearchSelect) {
+        window.initSearchSelect('senderSelectDeliver', 'sender');
+        window.initSearchSelect('recipientSelectDeliver', 'recipient');
+    }
 
     // Global Dispatch Modal Opener
-    window.openDispatchModal = function(id = null) {
+    window.openDispatchModal = function(id = null, btn = null) {
         const modalEl = document.getElementById('deliverModal');
         if (!modalEl) return;
         
@@ -163,6 +82,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (parcelIdInput) parcelIdInput.value = id || '';
         
         if (id) {
+            let originalHtml = '';
+            if (btn) {
+                originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            }
+
             fetch(`/parcels/${id}/json`)
                 .then(res => res.json())
                 .then(parcel => {
@@ -172,8 +98,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(err => {
                     console.error("Error fetching parcel:", err);
                     if (window.showToast) window.showToast("{{ __('Error') }}", "{{ __('Failed to load parcel data') }}", 'error');
+                })
+                .finally(() => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
                 });
         } else {
+            // Apply Defaults for New Dispatch (Rare, but for consistency)
+            if (window.defaultSettings && window.defaultSettings.dispatch) {
+                const def = window.defaultSettings.dispatch;
+                if (def.sender_id) {
+                    const wrap = document.getElementById('senderSelectDeliver');
+                    if (wrap) {
+                        wrap.querySelector('input[type="hidden"]').value = def.sender_id;
+                        wrap.querySelector('.search-input').value = def.sender_name;
+                    }
+                }
+                if (def.recipient_id) {
+                    const wrap = document.getElementById('recipientSelectDeliver');
+                    if (wrap) {
+                        wrap.querySelector('input[type="hidden"]').value = def.recipient_id;
+                        wrap.querySelector('.search-input').value = def.recipient_name;
+                    }
+                }
+            }
             modal.show();
         }
     };

@@ -656,6 +656,11 @@ document.addEventListener('DOMContentLoaded', function() {
 .bg-dark-soft-card { background: rgba(0,0,0,0.02); }
 [data-theme="dark"] .bg-dark-soft-card { background: rgba(255,255,255,0.02); }
 
+.btn-dark-soft, .btn-primary-soft {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
 .btn-dark-soft {
     background: rgba(0, 0, 0, 0.05) !important;
     color: var(--text-main) !important;
@@ -667,9 +672,37 @@ document.addEventListener('DOMContentLoaded', function() {
     color: white !important;
 }
 
-.btn-dark-soft:hover {
+.btn-primary-soft {
     background: rgba(99, 102, 241, 0.1) !important;
     color: #6366f1 !important;
+    border: none !important;
+}
+
+.btn-dark-soft:hover, .btn-primary-soft:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+}
+
+.btn-primary-soft:hover {
+    background: #6366f1 !important;
+    color: white !important;
+}
+
+.btn-dark-soft:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .btn-dark-soft:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.btn-dark-soft:active, .btn-primary-soft:active {
+    transform: translateY(-1px) scale(0.95);
+}
+
+.btn-primary-soft .spinner-border {
+    width: 1rem;
+    height: 1rem;
 }
 
 .bg-dark-soft {
@@ -787,4 +820,8 @@ document.addEventListener('DOMContentLoaded', function() {
 .border-white-10 { border-color: rgba(255, 255, 255, 0.1) !important; }
 </style>
 
+@include('parcels.partials.receive_modal')
+@include('parcels.partials.receive_scripts')
+@include('parcels.partials.dispatch_modal')
+@include('parcels.partials.dispatch_scripts')
 @endsection
