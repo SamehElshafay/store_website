@@ -84,6 +84,37 @@
                                 </div>
                             </div>
 
+                            {{-- Dispatch Status Setting --}}
+                            <div class="mt-4 pt-3 border-top border-white border-opacity-10">
+                                <h6 class="small fw-800 text-uppercase text-warning mb-3">
+                                    <i class="bi bi-arrow-right-circle-fill me-1"></i>
+                                    {{ __('Dispatch Modal — Target Status') }}
+                                </h6>
+                                <p class="small text-muted mb-3">
+                                    {{ __('Choose the status that will be applied to a parcel when it is registered & dispatched via the dispatch modal.') }}
+                                </p>
+                                <div class="row g-3 align-items-center">
+                                    @foreach ($parcel_statuses as $ps)
+                                    <div class="col-auto">
+                                        <label class="d-flex align-items-center gap-2 p-3 rounded-3 border cursor-pointer"
+                                            style="background: {{ $settings['default_dispatch_status_id'] == $ps->id ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)' }};
+                                                   border-color: {{ $settings['default_dispatch_status_id'] == $ps->id ? '#6366f1' : 'rgba(255,255,255,0.1)' }} !important;
+                                                   cursor: pointer; transition: all 0.2s;">
+                                            <input type="radio" name="default_dispatch_status_id"
+                                                   value="{{ $ps->id }}"
+                                                   class="dispatch-status-radio d-none"
+                                                   {{ $settings['default_dispatch_status_id'] == $ps->id ? 'checked' : '' }}>
+                                            <span class="badge rounded-pill px-3 py-2 fw-bold"
+                                                  style="background: {{ $ps->color ?? '#6366f1' }}20; color: {{ $ps->color ?? '#6366f1' }}; border: 1px solid {{ $ps->color ?? '#6366f1' }}40;">
+                                                <i class="bi {{ $ps->icon ?? 'bi-circle' }} me-1"></i>
+                                                {{ $ps->display_name }}
+                                            </span>
+                                        </label>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
                             <div class="mt-4 pt-3 border-top border-white border-opacity-10 text-end">
                                 <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" id="btnSaveDefaults">
                                     {{ __('Save Default Settings') }}
@@ -202,6 +233,24 @@ document.addEventListener('DOMContentLoaded', function() {
         window.initSearchSelect('setting_dispatch_sender', 'sender');
         window.initSearchSelect('setting_dispatch_recipient', 'recipient');
     }
+
+    // Dispatch Status Radio Cards — visual interaction
+    document.querySelectorAll('.dispatch-status-radio').forEach(radio => {
+        const label = radio.closest('label');
+        radio.addEventListener('change', () => {
+            // Reset all
+            document.querySelectorAll('.dispatch-status-radio').forEach(r => {
+                const l = r.closest('label');
+                l.style.background = 'rgba(255,255,255,0.03)';
+                l.style.borderColor = 'rgba(255,255,255,0.1)';
+            });
+            // Highlight selected
+            label.style.background = 'rgba(99,102,241,0.12)';
+            label.style.borderColor = '#6366f1';
+        });
+        // Clicking the label should select the radio
+        label.addEventListener('click', () => radio.checked = true);
+    });
 });
 
 document.getElementById('defaultContactsForm').addEventListener('submit', function(e) {

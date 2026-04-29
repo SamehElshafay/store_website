@@ -264,17 +264,25 @@ class ParcelController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Determine the target status from settings (fallback to 'delivered')
+        $dispatchStatusId = \App\Models\Setting::get('default_dispatch_status_id');
+        $dispatchStatus   = $dispatchStatusId
+            ? \App\Models\ParcelStatus::find($dispatchStatusId)
+            : null;
+
         $parcel->update(array_merge($validated, [
-            'status' => $validated['status'] ?? 'delivered',
-            'delivered_by' => Auth::id(),
-            'delivered_at' => Carbon::now(),
+            'status'      => $validated['status'] ?? ($dispatchStatus ? $dispatchStatus->key : 'delivered'),
+            'status_id'   => $validated['status_id'] ?? ($dispatchStatus ? $dispatchStatus->id : $parcel->status_id),
+            'delivered_by'=> Auth::id(),
+            'delivered_at'=> Carbon::now(),
             'barcode_out' => $validated['barcode_out'] ?? $parcel->barcode_in,
-            'delivered_to' => $validated['delivered_to'] ?? $parcel->recipient_name,
+            'delivered_to'=> $validated['delivered_to'] ?? $parcel->recipient_name,
         ]));
 
         return response()->json([
-            'message' => 'Parcel delivered successfully',
-            'data' => $parcel
+            'success' => true,
+            'message' => __('Parcel dispatched successfully'),
+            'data'    => $parcel
         ]);
     }
 

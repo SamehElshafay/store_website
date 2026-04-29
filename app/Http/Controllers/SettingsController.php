@@ -14,15 +14,17 @@ class SettingsController extends Controller
     public function index()
     {
         $all_contacts = \App\Models\Contact::orderBy('name')->get();
+        $parcel_statuses = \App\Models\ParcelStatus::orderBy('sort_order')->get();
         
         $settings = [
-            'default_receive_sender_id' => \App\Models\Setting::get('default_receive_sender_id'),
+            'default_receive_sender_id'    => \App\Models\Setting::get('default_receive_sender_id'),
             'default_receive_recipient_id' => \App\Models\Setting::get('default_receive_recipient_id'),
-            'default_dispatch_sender_id' => \App\Models\Setting::get('default_dispatch_sender_id'),
-            'default_dispatch_recipient_id' => \App\Models\Setting::get('default_dispatch_recipient_id'),
+            'default_dispatch_sender_id'   => \App\Models\Setting::get('default_dispatch_sender_id'),
+            'default_dispatch_recipient_id'=> \App\Models\Setting::get('default_dispatch_recipient_id'),
+            'default_dispatch_status_id'   => \App\Models\Setting::get('default_dispatch_status_id'),
         ];
 
-        return view('settings.index', compact('all_contacts', 'settings'));
+        return view('settings.index', compact('all_contacts', 'settings', 'parcel_statuses'));
     }
 
     public function updateDefaults(Request $request)
@@ -31,11 +33,14 @@ class SettingsController extends Controller
             'default_receive_sender_id',
             'default_receive_recipient_id',
             'default_dispatch_sender_id',
-            'default_dispatch_recipient_id'
+            'default_dispatch_recipient_id',
+            'default_dispatch_status_id',
         ]);
 
         foreach ($data as $key => $value) {
-            \App\Models\Setting::set($key, $value);
+            if ($value !== null && $value !== '') {
+                \App\Models\Setting::set($key, $value);
+            }
         }
 
         return response()->json([
