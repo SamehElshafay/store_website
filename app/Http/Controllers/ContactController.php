@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,15 +48,9 @@ class ContactController extends Controller
     /**
      * Store a new contact.
      */
-    public function store(Request $request)
+    public function store(StoreContactRequest $request)
     {
-        $validated = $request->validate([
-            'type'          => 'required|in:sender,recipient',
-            'name'          => 'required|string|max:255',
-            'phone'         => 'required|string|max:20|unique:contacts,phone',
-            'address'       => 'required|string|max:500',
-            'notes'         => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $validated['created_by'] = Auth::id();
 
@@ -92,15 +88,9 @@ class ContactController extends Controller
     /**
      * Update contact details.
      */
-    public function update(Request $request, Contact $contact)
+    public function update(UpdateContactRequest $request, Contact $contact)
     {
-        $validated = $request->validate([
-            'type'          => 'required|in:sender,recipient',
-            'name'          => 'required|string|max:255',
-            'phone'         => 'required|string|max:20|unique:contacts,phone,' . $contact->id,
-            'address'       => 'required|string|max:500',
-            'notes'         => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $contact->update($validated);
 
