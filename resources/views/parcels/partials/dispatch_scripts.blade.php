@@ -69,6 +69,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (form) {
             form.reset();
+            const today = new Date().toISOString().split('T')[0];
+            const bookingField = form.querySelector('[name="booking_date"]');
+            const deliveryField = form.querySelector('[name="delivery_date"]');
+            if (bookingField) bookingField.value = today;
+            if (deliveryField) deliveryField.value = today;
+
             form.querySelectorAll('.custom-search-select').forEach(wrapper => {
                 wrapper.querySelector('input[type="hidden"]').value = '';
                 wrapper.querySelector('.search-input').value = '';
