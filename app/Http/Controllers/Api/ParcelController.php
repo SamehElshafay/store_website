@@ -511,9 +511,15 @@ class ParcelController extends Controller
     /**
      * Export parcels to Excel (CSV format).
      */
-    public function export()
+    public function export(Request $request)
     {
-        $parcels = Parcel::with(['receiver', 'recipientContact'])->get();
+        $query = Parcel::with(['receiver', 'recipientContact', 'statusModel', 'senderContact']);
+
+        if ($request->filled('status')) {
+            $query->where('status_id', $request->status);
+        }
+
+        $parcels = $query->get();
         
         $filename = "parcels_export_" . date('Y-m-d_H-i') . ".csv";
         $headers = [

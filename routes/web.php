@@ -44,6 +44,11 @@ Route::middleware('auth')->group(function () {
     Route::get('settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::post('settings/defaults', [App\Http\Controllers\SettingsController::class, 'updateDefaults'])->name('settings.defaults.update');
 
+    // Excel Import
+    Route::get('parcels-import/{statusId}', [App\Http\Controllers\ExcelImportController::class, 'preview'])->name('parcels.import.preview');
+    Route::post('parcels-import/parse', [App\Http\Controllers\ExcelImportController::class, 'parse'])->name('parcels.import.parse');
+    Route::post('parcels-import/commit', [App\Http\Controllers\ExcelImportController::class, 'commit'])->name('parcels.import.commit');
+
 });
 
 // Cache Clearing Route for Shared Hosting (Namecheap)

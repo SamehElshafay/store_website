@@ -36,6 +36,11 @@
                             <i class="bi bi-plus-lg"></i>
                         </button>
 
+                        {{-- Excel Import Button --}}
+                        <a href="{{ route('parcels.import.preview', $status->id) }}" class="btn-excel-genius" onclick="event.stopPropagation();" title="{{ __('Import from Excel') }}">
+                            <i class="bi bi-file-earmark-excel"></i>
+                        </a>
+
                         <div class="mb-2">
                             @php
                                 $statusIcon = $status->icon ?: 'bi-dot';
@@ -608,6 +613,35 @@
         transform: rotate(180deg) scale(1.2);
         border-color: transparent;
         box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-excel-genius {
+        position: absolute;
+        top: 45px;
+        right: 10px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(5px);
+        text-decoration: none;
+    }
+
+    .btn-excel-genius:hover {
+        background: #22c55e;
+        color: white;
+        transform: scale(1.2);
+        border-color: transparent;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
     }
 
     @keyframes genius-pulse {
