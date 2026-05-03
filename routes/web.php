@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     // Settings
     Route::get('settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::post('settings/defaults', [App\Http\Controllers\SettingsController::class, 'updateDefaults'])->name('settings.defaults.update');
+    Route::post('settings/clear-parcels', [App\Http\Controllers\SettingsController::class, 'clearParcels'])->name('settings.parcels.clear');
 
     // Excel Import
     Route::get('parcels-import/{statusId}', [App\Http\Controllers\ExcelImportController::class, 'preview'])->name('parcels.import.preview');

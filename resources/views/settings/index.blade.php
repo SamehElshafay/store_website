@@ -187,17 +187,42 @@
                     <div class="glass-card p-4 rounded-4 border-0 shadow-sm h-100 transition-all hover-up">
                         <div class="d-flex align-items-start gap-3 mb-4">
                             <div class="avatar-sm bg-danger-soft text-danger rounded-3 d-flex align-items-center justify-content-center fs-4" style="width: 48px; height: 48px;">
-                                <i class="bi bi-tools"></i>
+                                <i class="bi bi-trash3-fill"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <h5 class="fw-bold text-main mb-1">{{ __('Maintenance') }}</h5>
-                                <p class="small text-muted mb-0">{{ __('System tools to clear cache and optimize performance.') }}</p>
+                                <h5 class="fw-bold text-main mb-1">{{ __('System Cleanup') }}</h5>
+                                <p class="small text-muted mb-0">{{ __('Wipe all parcel records from the system. Use with caution.') }}</p>
                             </div>
                         </div>
-                        <button class="btn btn-danger-soft w-100 rounded-pill fw-bold opacity-50 cursor-not-allowed" disabled>
-                            {{ __('Coming Soon') }}
+                        <button class="btn btn-danger-soft w-100 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#clearParcelsModal">
+                            <i class="bi bi-exclamation-triangle me-2"></i> {{ __('Delete All Parcels') }}
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear Parcels Confirmation Modal -->
+<div class="modal fade" id="clearParcelsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0 shadow-lg rounded-4 overflow-hidden" style="background: var(--card-bg); backdrop-filter: blur(10px);">
+            <div class="modal-body p-5 text-center">
+                <div class="avatar-lg bg-danger-soft text-danger rounded-circle d-flex align-items-center justify-content-center fs-1 mx-auto mb-4" style="width: 100px; height: 100px; background: rgba(239, 68, 68, 0.1);">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h3 class="fw-800 text-main mb-2">{{ __('Are you absolutely sure?') }}</h3>
+                <p class="text-muted mb-4 fs-5">
+                    {{ __('This action will permanently delete ALL parcels from the system. This process cannot be undone.') }}
+                </p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger btn-lg rounded-pill fw-bold shadow-sm py-3" id="btnConfirmClear">
+                        <i class="bi bi-trash3-fill me-2"></i> {{ __('Yes, Delete Everything') }}
+                    </button>
+                    <button type="button" class="btn btn-dark-soft btn-lg rounded-pill fw-bold py-3" data-bs-dismiss="modal">
+                        {{ __('No, Keep Data') }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -309,6 +334,48 @@ document.getElementById('defaultContactsForm').addEventListener('submit', functi
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
+});
+
+function confirmClearParcels() {
+    // Deprecated, now using modal
+}
+
+document.getElementById('btnConfirmClear').addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> {{ __('Deleting...') }}`;
+    btn.disabled = true;
+
+    try {
+        const res = await fetch("{{ route('settings.parcels.clear') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+        
+        const result = await res.json();
+        if (res.ok && result.success) {
+            showToast("{{ __('Success') }}", result.message, 'success');
+            
+            // Close modal using Bootstrap API
+            const modalEl = document.getElementById('clearParcelsModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast("{{ __('Error') }}", result.message || "{{ __('Failed to clear parcels') }}", 'error');
+        }
+    } catch (err) {
+        showToast("{{ __('Error') }}", "{{ __('System Error') }}", 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 });
 </script>
 @endsection

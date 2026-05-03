@@ -48,4 +48,13 @@ class SettingsController extends Controller
             'message' => __('Default contacts updated successfully')
         ]);
     }
+
+    public function clearParcels()
+    {
+        \App\Models\Parcel::truncate();
+        return response()->json([
+            'success' => true,
+            'message' => __('All parcels have been deleted successfully')
+        ]);
+    }
 }
