@@ -292,6 +292,186 @@ class ExcelImportController extends Controller
         ]);
     }
 
+    /**
+     * Show Master Import Page
+     */
+    public function masterPreview()
+    {
+        return view('settings.master_import');
+    }
+
+    /**
+     * Parse Master Excel (Dynamic Status)
+     */
+    public function parseMaster(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file',
+        ]);
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('file')->getPathname());
+            $sheet       = $spreadsheet->getActiveSheet();
+            $rows        = $sheet->toArray(null, true, true, false);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => __('Failed to read file: ') . $e->getMessage()], 422);
+        }
+
+        if (empty($rows) || count($rows) < 2) {
+            return response()->json(['success' => false, 'message' => __('The file is empty.')], 422);
+        }
+
+        $headers = array_map('trim', $rows[0]);
+        $map     = array_flip($headers);
+
+        $col = [
+            'barcode'         => $map['باركود الشحنة']        ?? null,
+            'recipient_name'  => $map['اسم المستلم']          ?? null,
+            'recipient_phone' => $map['هاتف المستلم']         ?? null,
+            'city'            => $map['المدينة']               ?? null,
+            'region'          => $map['الحي']                  ?? null,
+            'address'         => $map['الشارع']                ?? null,
+            'price'           => $map['السعر']                 ?? null,
+            'collection'      => $map['التحصيل']               ?? null,
+            'invoice_number'  => $map['رقم الإرسالية']         ?? null,
+            'notes'           => $map['الملاحظات']             ?? null,
+            'special_notes'   => $map['ملاحظات خاصة']          ?? null,
+            'payment_method'  => $map['طريقة الدفع']           ?? null,
+            'status'          => $map['الحالة']                ?? null,
+            'content'         => $map['محتوى الطرد']           ?? null,
+            'sender_name'     => $map['إسم المرسل']            ?? null,
+            'sender_phone'    => $map['هاتف المرسل']           ?? null,
+            'create_date'     => $map['تاريخ الانشاء']         ?? null,
+            'delivery_date'   => $map['تاريخ التوصيل']         ?? null,
+        ];
+
+        $preview = [];
+        foreach (array_slice($rows, 1) as $row) {
+            $barcode = trim($row[$col['barcode']] ?? '');
+            if (empty($barcode)) continue;
+
+            $statusName = trim($row[$col['status']] ?? 'Received');
+            $existing = Parcel::where('barcode_in', $barcode)->orWhere('barcode_out', $barcode)->first();
+            
+            $preview[] = [
+                'barcode'             => $barcode,
+                'sender_name'         => trim($row[$col['sender_name']]  ?? ''),
+                'sender_phone'        => $this->normalizePhone(trim($row[$col['sender_phone']] ?? '')),
+                'recipient_name'      => trim($row[$col['recipient_name']]  ?? ''),
+                'recipient_phone'     => $this->normalizePhone(trim($row[$col['recipient_phone']] ?? '')),
+                'recipient_city'      => trim($row[$col['city']] ?? ''),
+                'recipient_region'    => trim($row[$col['region']] ?? ''),
+                'recipient_address'   => trim($row[$col['address']] ?? ''),
+                'title'               => trim($row[$col['content']] ?? ''),
+                'delivery_price'      => (float) str_replace(',', '', $row[$col['price']] ?? 0),
+                'collection_amount'   => (float) str_replace(',', '', $row[$col['collection']] ?? 0),
+                'invoice_number'      => trim($row[$col['invoice_number']] ?? ''),
+                'collection_method'   => $this->mapPaymentMethod($row[$col['payment_method']] ?? ''),
+                'status_name'         => $statusName,
+                'notes'               => trim(($row[$col['notes']] ?? '') . ' ' . ($row[$col['special_notes']] ?? '')),
+                'booking_date'        => $this->parseDate($row[$col['create_date']] ?? ''),
+                'already_exists'      => $existing ? true : false,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'rows'    => $preview,
+            'total'   => count($preview),
+        ]);
+    }
+
+    /**
+     * Commit Master Import
+     */
+    public function commitMaster(Request $request)
+    {
+        $request->validate(['rows' => 'required|array|min:1']);
+        $userId = Auth::id();
+        $created = 0; $updated = 0; $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->rows as $row) {
+                $barcode = trim($row['barcode'] ?? '');
+                if (empty($barcode)) continue;
+
+                // 1. Resolve / Create Status
+                $status = $this->resolveStatus($row['status_name'] ?? 'Received');
+
+                // 2. Resolve Contacts
+                $senderContact = $this->resolveContact($row['sender_name'] ?? '', $row['sender_phone'] ?? '', '', 'sender', $userId);
+                $recipientContact = $this->resolveContact($row['recipient_name'] ?? '', $row['recipient_phone'] ?? '', $row['recipient_city'] ?? '', 'recipient', $userId, $row['recipient_address'] ?? '', $row['recipient_region'] ?? '');
+
+                // 3. Prep Data
+                $data = [
+                    'title'                => $row['title'] ?? null,
+                    'barcode_in'           => $barcode,
+                    'status'               => $status->key,
+                    'status_id'            => $status->id,
+                    'sender_contact_id'    => $senderContact?->id,
+                    'recipient_contact_id' => $recipientContact?->id,
+                    'delivery_price'       => $row['delivery_price'] ?? 0,
+                    'collection_amount'    => $row['collection_amount'] ?? 0,
+                    'net_collection'       => ($row['collection_amount'] ?? 0) - ($row['delivery_price'] ?? 0),
+                    'invoice_number'       => $row['invoice_number'] ?? null,
+                    'collection_method'    => $row['collection_method'] ?? 'cash',
+                    'notes'                => $row['notes'] ?? null,
+                    'booking_date'         => $row['booking_date'] ?? null,
+                ];
+
+                $parcel = Parcel::where('barcode_in', $barcode)->orWhere('barcode_out', $barcode)->first();
+
+                if ($parcel) {
+                    $parcel->update($data);
+                    $updated++;
+                } else {
+                    $data['received_by'] = $userId;
+                    $data['received_at'] = Carbon::now();
+                    Parcel::create($data);
+                    $created++;
+                }
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Import complete: :c created, :u updated.', ['c' => $created, 'u' => $updated]),
+            'data'    => ['created' => $created, 'updated' => $updated, 'errors' => $errors]
+        ]);
+    }
+
+    private function resolveStatus(string $name): ParcelStatus
+    {
+        $name = trim($name);
+        $status = ParcelStatus::where('name_ar', $name)
+            ->orWhere('name_en', $name)
+            ->orWhere('name', $name)
+            ->first();
+
+        if ($status) return $status;
+
+        // Create new status
+        $colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#71717a'];
+        $icons  = ['bi-box-seam', 'bi-truck', 'bi-check-circle', 'bi-exclamation-triangle', 'bi-clock-history', 'bi-geo-alt'];
+        
+        return ParcelStatus::create([
+            'name'       => $name,
+            'name_ar'    => $name,
+            'name_en'    => $name,
+            'key'        => \Illuminate\Support\Str::slug($name),
+            'color'      => $colors[array_rand($colors)],
+            'icon'       => $icons[array_rand($icons)],
+            'modal_type' => 'receive',
+            'is_default' => false,
+            'sort_order' => ParcelStatus::max('sort_order') + 1
+        ]);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private function resolveContact(

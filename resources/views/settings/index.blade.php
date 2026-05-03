@@ -199,6 +199,24 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Master Excel Import -->
+                <div class="col-md-12">
+                    <div class="glass-card p-4 rounded-4 border-0 shadow-sm transition-all hover-up" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.2) !important;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-md bg-success text-white rounded-4 d-flex align-items-center justify-content-center fs-2" style="width: 64px; height: 64px; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;">
+                                <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold text-main mb-1">{{ __('Master Excel Import') }}</h5>
+                                <p class="small text-muted mb-0">{{ __('Import parcels from Excel with dynamic status recognition. New statuses will be created automatically.') }}</p>
+                            </div>
+                            <a href="{{ route('parcels.master_import.preview') }}" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                                {{ __('Open Importer') }} <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -302,5 +302,13 @@
     "receive": "استلام",
     "default": "افتراضي",
     "English": "الإنجليزية",
-    "Arabic": "العربية"
+    "Arabic": "العربية",
+    "Master Excel Import": "استيراد إكسل شامل",
+    "Import parcels from Excel with dynamic status recognition. New statuses will be created automatically.": "استيراد الطرود من إكسل مع التعرف التلقائي على الحالات. سيتم إنشاء الحالات الجديدة تلقائياً.",
+    "Open Importer": "فتح المستورد",
+    "Master Import from Excel": "استيراد شامل من إكسل",
+    "Dynamic Status Creation enabled. New statuses will be created automatically.": "تم تفعيل إنشاء الحالات تلقائياً. سيتم إنشاء أي حالة غير موجودة في النظام.",
+    "Upload Master Excel File": "رفع ملف الإكسيل الشامل",
+    "Status in File": "الحالة في الملف",
+    "Master Import Complete": "اكتمل الاستيراد الشامل"
 }

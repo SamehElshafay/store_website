@@ -50,6 +50,11 @@ Route::middleware('auth')->group(function () {
     Route::post('parcels-import/parse', [App\Http\Controllers\ExcelImportController::class, 'parse'])->name('parcels.import.parse');
     Route::post('parcels-import/commit', [App\Http\Controllers\ExcelImportController::class, 'commit'])->name('parcels.import.commit');
 
+    // Master Excel Import (Dynamic Status)
+    Route::get('master-import', [App\Http\Controllers\ExcelImportController::class, 'masterPreview'])->name('parcels.master_import.preview');
+    Route::post('master-import/parse', [App\Http\Controllers\ExcelImportController::class, 'parseMaster'])->name('parcels.master_import.parse');
+    Route::post('master-import/commit', [App\Http\Controllers\ExcelImportController::class, 'commitMaster'])->name('parcels.master_import.commit');
+
 });
 
 // Cache Clearing Route for Shared Hosting (Namecheap)
