@@ -176,8 +176,8 @@
                             </div>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="?lang=en" class="btn {{ app()->getLocale() == 'en' ? 'btn-primary' : 'btn-dark-soft' }} flex-grow-1 rounded-pill fw-bold">English</a>
-                            <a href="?lang=ar" class="btn {{ app()->getLocale() == 'ar' ? 'btn-primary' : 'btn-dark-soft' }} flex-grow-1 rounded-pill fw-bold">العربية</a>
+                            <a href="?lang=en" class="btn {{ app()->getLocale() == 'en' ? 'btn-primary' : 'btn-dark-soft' }} flex-grow-1 rounded-pill fw-bold">{{ __('English') }}</a>
+                            <a href="?lang=ar" class="btn {{ app()->getLocale() == 'ar' ? 'btn-primary' : 'btn-dark-soft' }} flex-grow-1 rounded-pill fw-bold">{{ __('Arabic') }}</a>
                         </div>
                     </div>
                 </div>
