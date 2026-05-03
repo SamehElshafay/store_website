@@ -89,7 +89,7 @@
 </div>
 
 @if($parcels->hasPages())
-<div class="px-4 py-4 bg-dark-soft-card">
+<div class="px-4 py-4 d-flex justify-content-center border-top border-white-10">
     {{ $parcels->links() }}
 </div>
 @endif

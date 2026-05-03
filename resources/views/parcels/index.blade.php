@@ -806,10 +806,40 @@ document.addEventListener('DOMContentLoaded', function() {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-.pagination { margin-bottom: 0; justify-content: center; gap: 5px; }
-.page-link { border: none; background: rgba(0,0,0,0.05); color: var(--text-main); border-radius: 8px !important; padding: 8px 15px; }
-.page-item.active .page-link { background: #6366f1; color: white; }
-[data-theme="dark"] .page-link { background: rgba(255,255,255,0.05); }
+.pagination { margin-bottom: 0; justify-content: center; gap: 8px; }
+.page-link { 
+    border: 1px solid rgba(255,255,255,0.05); 
+    background: rgba(0,0,0,0.03); 
+    color: var(--text-main); 
+    border-radius: 12px !important; 
+    padding: 10px 18px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+}
+.page-link:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+.page-item.active .page-link { 
+    background: var(--primary-gradient); 
+    color: white; 
+    border: none;
+    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+}
+.page-item.disabled .page-link {
+    background: transparent;
+    opacity: 0.3;
+}
+[data-theme="dark"] .page-link { 
+    background: rgba(255,255,255,0.05); 
+    color: rgba(255,255,255,0.8);
+}
+[data-theme="dark"] .page-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
 
 /* Missing Classes for Bulk Bar */
 .bg-main { background-color: var(--main-color) !important; }
