@@ -64,8 +64,37 @@
             {{-- Loading State --}}
             <div id="loadingState" class="glass-container p-5 text-center d-none mb-4 shadow-lg">
                 <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem;"></div>
-                <p class="fw-bold text-main mb-0">{{ __('Analyzing file...') }}</p>
-                <p class="text-muted small">{{ __('Checking barcodes and contacts in the database...') }}</p>
+                <p class="fw-bold text-main mb-2" id="loadingTitle">{{ __('Analyzing file...') }}</p>
+                
+                <div class="progress mb-3 rounded-pill" style="height: 10px; background: rgba(255,255,255,0.05);">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted px-1">
+                    <span id="progressText">{{ __('Preparing...') }}</span>
+                    <span id="progressCounter">0/0</span>
+                </div>
+
+                <p class="text-muted small mt-3 mb-2" id="loadingSubtitle">{{ __('Checking barcodes and contacts in the database...') }}</p>
+                <div id="currentProcess" class="font-monospace small text-primary mb-3"></div>
+
+                {{-- Live Error Log --}}
+                <div id="liveErrorLog" class="d-none text-start mt-4">
+                    <h6 class="small fw-bold text-danger text-uppercase mb-2"><i class="bi bi-exclamation-triangle me-2"></i>{{ __('Errors Encountered') }}</h6>
+                    <div class="glass-card border-danger border-opacity-25 rounded-4 overflow-hidden">
+                        <div class="table-responsive" style="max-height: 200px;">
+                            <table class="table table-sm table-borderless mb-0 small">
+                                <thead class="bg-danger bg-opacity-10">
+                                    <tr>
+                                        <th class="ps-3 py-2 text-danger">{{ __('Barcode') }}</th>
+                                        <th class="py-2 text-danger">{{ __('Issue') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="errorLogBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- Preview Table --}}
@@ -208,6 +237,12 @@ async function parseFile() {
     document.getElementById('previewSection').classList.add('d-none');
     document.getElementById('resultSection').classList.add('d-none');
     document.getElementById('btnParse').disabled = true;
+    
+    document.getElementById('loadingTitle').textContent = '{{ __("Analyzing file...") }}';
+    document.getElementById('loadingSubtitle').textContent = '{{ __("Checking barcodes and contacts in the database...") }}';
+    document.getElementById('progressBar').style.width = '100%'; // Indeterminate look for parse
+    document.getElementById('progressText').textContent = '{{ __("Reading Excel...") }}';
+    document.getElementById('progressCounter').textContent = '...';
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -307,45 +342,113 @@ function renderPreview(data) {
 async function commitImport() {
     if (parsedRows.length === 0) return;
 
-    document.getElementById('btnCommit').disabled  = true;
-    document.getElementById('btnCommit').innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>{{ __('Importing...') }}`;
+    const totalRows = parsedRows.length;
+    const batchSize = 100; // Adjust as needed
+    let processedCount = 0;
+    let totalCreated = 0;
+    let totalUpdated = 0;
+    let totalSkipped = 0;
+    let allErrors = [];
 
-    try {
-        const resp = await fetch(COMMIT_URL, {
-            method : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN,
-                'Accept'      : 'application/json',
-            },
-            body: JSON.stringify({ status_id: STATUS_ID, rows: parsedRows }),
-        });
-        const data = await resp.json();
+    document.getElementById('loadingState').classList.remove('d-none');
+    document.getElementById('previewSection').classList.add('d-none');
+    document.getElementById('loadingTitle').textContent = '{{ __("Importing Data...") }}';
+    document.getElementById('loadingSubtitle').textContent = '{{ __("Writing records to database...") }}';
+    
+    const pb = document.getElementById('progressBar');
+    const pc = document.getElementById('progressCounter');
+    const pt = document.getElementById('progressText');
+    const cp = document.getElementById('currentProcess');
+    const errorBody = document.getElementById('errorLogBody');
+    const errorLog  = document.getElementById('liveErrorLog');
 
-        document.getElementById('previewSection').classList.add('d-none');
+    for (let i = 0; i < totalRows; i += batchSize) {
+        const batch = parsedRows.slice(i, i + batchSize);
+        
+        // Show what we are doing
+        const batchBarcodes = batch.slice(0, 2).map(b => b.barcode).join(', ') + (batch.length > 2 ? '...' : '');
+        cp.textContent = `{{ __('Processing:') }} ${batchBarcodes}`;
+        pt.textContent = `{{ __('Processing batch...') }}`;
+        
+        try {
+            const resp = await fetch(COMMIT_URL, {
+                method : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                    'Accept'      : 'application/json',
+                },
+                body: JSON.stringify({ status_id: STATUS_ID, rows: batch }),
+            });
+            
+            const data = await resp.json();
 
-        if (data.success) {
-            const d = data.data;
-            document.getElementById('resultTitle').textContent  = data.message;
-            document.getElementById('resultDetails').innerHTML  =
-                `<span class="text-success fw-bold">${d.created} {{ __('Created') }}</span> &bull; ` +
-                `<span class="text-primary fw-bold">${d.updated} {{ __('Updated') }}</span> &bull; ` +
-                `<span class="text-muted">${d.skipped} {{ __('Skipped') }}</span>`;
-
-            if (d.errors?.length > 0) {
-                document.getElementById('resultErrors').innerHTML =
-                    '<strong>{{ __("Errors:") }}</strong><br>' + d.errors.map(e => `• ${e}`).join('<br>');
+            if (data.success) {
+                totalCreated += data.data.created;
+                totalUpdated += data.data.updated;
+                totalSkipped += data.data.skipped;
+                
+                // Live Error Logging
+                if (data.data.errors && data.data.errors.length > 0) {
+                    errorLog.classList.remove('d-none');
+                    data.data.errors.forEach(errStr => {
+                        allErrors.push(errStr);
+                        const [barcode, ...msgParts] = errStr.split(':');
+                        const msg = msgParts.join(':').trim();
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="ps-3 font-monospace fw-bold text-danger">${barcode}</td>
+                            <td class="text-muted">${msg}</td>
+                        `;
+                        errorBody.appendChild(tr);
+                    });
+                }
+            } else {
+                // If the whole batch request failed (e.g. 500), log it and CONTINUE
+                errorLog.classList.remove('d-none');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-3 fw-bold text-danger">BATCH ERROR</td>
+                    <td class="text-muted">${data.message || 'Unknown server error'}</td>
+                `;
+                errorBody.appendChild(tr);
             }
-        } else {
-            document.getElementById('resultTitle').textContent = data.message;
-        }
-        document.getElementById('resultSection').classList.remove('d-none');
 
-    } catch (err) {
-        showToast('{{ __("Error") }}', err.message, 'error');
-        document.getElementById('btnCommit').disabled  = false;
-        document.getElementById('btnCommit').innerHTML = `<i class="bi bi-check-circle me-2"></i>{{ __('Confirm Import') }}`;
+            processedCount += batch.length;
+            const percentage = Math.round((processedCount / totalRows) * 100);
+            pb.style.width = percentage + '%';
+            pc.textContent = `${processedCount}/${totalRows}`;
+            pt.textContent = `{{ __('Completed') }} ${percentage}%`;
+
+        } catch (err) {
+            console.error("Batch error:", err);
+            // Log fetch error and CONTINUE
+            errorLog.classList.remove('d-none');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-3 fw-bold text-danger">NETWORK ERROR</td>
+                <td class="text-muted">${err.message}</td>
+            `;
+            errorBody.appendChild(tr);
+            
+            processedCount += batch.length; // Count as processed to keep bar moving
+        }
     }
+
+    cp.textContent = '';
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('resultTitle').textContent  = '{{ __("Import completed successfully") }}';
+    document.getElementById('resultDetails').innerHTML  =
+        `<span class="text-success fw-bold">${totalCreated} {{ __('Created') }}</span> &bull; ` +
+        `<span class="text-primary fw-bold">${totalUpdated} {{ __('Updated') }}</span> &bull; ` +
+        `<span class="text-muted">${totalSkipped} {{ __('Skipped') }}</span>`;
+
+    if (allErrors.length > 0) {
+        document.getElementById('resultErrors').innerHTML =
+            '<strong>{{ __("Errors:") }}</strong><br>' + allErrors.map(e => `• ${e}`).join('<br>');
+    }
+    document.getElementById('resultSection').classList.remove('d-none');
 }
 
 function resetImport() {
@@ -356,6 +459,14 @@ function resetImport() {
     document.getElementById('previewSection').classList.add('d-none');
     document.getElementById('resultSection').classList.add('d-none');
     document.getElementById('btnParse').disabled = true;
+    
+    // Reset Progress
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressCounter').textContent = '0/0';
+    document.getElementById('progressText').textContent = '{{ __("Preparing...") }}';
+    document.getElementById('currentProcess').textContent = '';
+    document.getElementById('errorLogBody').innerHTML = '';
+    document.getElementById('liveErrorLog').classList.add('d-none');
 }
 
 // Use existing showToast if available, else fallback
