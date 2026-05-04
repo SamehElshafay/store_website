@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('parcels/{id}', [App\Http\Controllers\Api\ParcelController::class, 'destroy']);
 
     // Status Management
+    Route::post('parcel-statuses/{id}/update', [\App\Http\Controllers\ParcelStatusController::class, 'update'])->name('parcel-statuses.update-post');
     Route::resource('parcel-statuses', \App\Http\Controllers\ParcelStatusController::class);
     Route::post('parcel-statuses/reorder', [\App\Http\Controllers\ParcelStatusController::class, 'reorder'])->name('parcel-statuses.reorder');
     Route::post('parcel-statuses/{id}/default', [\App\Http\Controllers\ParcelStatusController::class, 'setDefault'])->name('parcel-statuses.default');

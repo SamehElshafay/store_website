@@ -449,8 +449,8 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
         
         console.log('Sending payload:', JSON.stringify(payload));
         
-        const response = await fetch(`/parcel-statuses/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`/parcel-statuses/${id}/update`, {
+            method: 'POST',
             body: JSON.stringify(payload),
             headers: {
                 'Content-Type': 'application/json',
