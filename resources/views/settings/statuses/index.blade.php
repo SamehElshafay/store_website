@@ -138,9 +138,9 @@
                             </select>
                         </div>
                         <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium">
-                                <input class="form-check-input ms-0 me-3 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="add_is_unique" checked>
-                                <label class="form-check-label fw-800 text-main small" for="add_is_unique">
+                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium d-flex align-items-center gap-2">
+                                <input class="form-check-input m-0 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="add_is_unique" checked>
+                                <label class="form-check-label fw-800 text-main small m-0" for="add_is_unique">
                                     {{ __('Barcode Must Be Unique') }}
                                 </label>
                             </div>
@@ -204,9 +204,9 @@
                             </select>
                         </div>
                         <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium">
-                                <input class="form-check-input ms-0 me-3 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="edit_is_unique">
-                                <label class="form-check-label fw-800 text-main small" for="edit_is_unique">
+                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium d-flex align-items-center gap-2">
+                                <input class="form-check-input m-0 cursor-pointer shadow-none" type="checkbox" id="edit_is_unique">
+                                <label class="form-check-label fw-800 text-main small m-0" for="edit_is_unique">
                                     {{ __('Barcode Must Be Unique') }}
                                 </label>
                             </div>
@@ -437,8 +437,14 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
     
     try {
         const formData = new FormData(this);
+        const isUniqueVal = document.getElementById('edit_is_unique').checked;
+        
+        // Explicitly append since unchecked checkboxes are ignored by FormData
+        // and we removed the name attribute to handle it manually here.
+        formData.append('is_unique', isUniqueVal ? '1' : '0');
+        
         console.log("Updating Status ID:", id);
-        console.log("Is Unique Checked:", document.getElementById('edit_is_unique').checked);
+        console.log("Is Unique Checked:", isUniqueVal);
         
         const response = await fetch(`/parcel-statuses/${id}`, {
             method: 'POST',
