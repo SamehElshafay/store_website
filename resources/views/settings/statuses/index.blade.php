@@ -437,6 +437,9 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
     
     try {
         const formData = new FormData(this);
+        console.log("Updating Status ID:", id);
+        console.log("Is Unique Checked:", document.getElementById('edit_is_unique').checked);
+        
         const response = await fetch(`/parcel-statuses/${id}`, {
             method: 'POST',
             body: formData,
@@ -534,6 +537,8 @@ document.addEventListener('DOMContentLoaded', function() {
     cursor: pointer;
     padding-top: 2px;
     transition: color 0.3s ease;
+    color: #ffffff !important;
+    font-weight: 600;
 }
 
 .custom-switch-premium .form-check-input:hover {

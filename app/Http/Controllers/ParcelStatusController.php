@@ -50,16 +50,16 @@ class ParcelStatusController extends Controller
             'color' => 'nullable|string|max:20',
             'icon' => 'nullable|string|max:100',
             'modal_type' => 'nullable|string|in:receive,dispatch',
-            'is_unique' => 'nullable|boolean',
         ]);
 
-        $validated['is_unique'] = $request->boolean('is_unique');
-
-        $status->update($validated);
+        $status->fill($validated);
+        $status->is_unique = $request->boolean('is_unique');
+        $status->save();
 
         return response()->json([
             'success' => true,
-            'message' => __('Status updated successfully')
+            'message' => __('Status updated successfully'),
+            'data' => $status
         ]);
     }
 
