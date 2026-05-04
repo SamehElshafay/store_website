@@ -103,7 +103,11 @@ class ParcelController extends Controller
             });
         }
 
-        $parcels = $query->latest()->paginate(25)->withQueryString();
+        $perPage = (int) in_array((int) $request->get('per_page', 25), [10, 25, 50, 100, 250])
+            ? $request->get('per_page', 25)
+            : 25;
+
+        $parcels = $query->latest()->paginate($perPage)->withQueryString();
         $statuses = ParcelStatus::orderBy('sort_order')->get();
 
         // 1. Priority: AJAX calls from the site for the dynamic table
@@ -566,11 +570,29 @@ class ParcelController extends Controller
             "Expires"             => "0"
         ];
 
+        // ⚠️ IMPORTANT: Column names MUST match exactly what the import parser expects.
+        // See ExcelImportController::parse() for the mapping reference.
         $columns = [
-            'باركود الطرد', 'باركود التحصيل', 'إسم المرسل', 'إسم المستقبل', 
-            'هاتف المستقبل', 'عنوان المستقبل', 'سعر التوصيل', 'التحصيل', 
-            'صافي التحصيل', 'ملاحظات', 'رقم الفاتورة', 'طريقة التحصيل', 
-            'باركود كشف التحصيل', 'نوع الخدمة', 'تاريخ الحجز', 'تاريخ التوصيل'
+            'باركود الشحنة',        // barcode_in          → $col['barcode']
+            'إسم المرسل',           // sender name         → $col['sender_name']
+            'هاتف المرسل',          // sender phone        → $col['sender_phone']
+            'اسم المستلم',          // recipient name      → $col['recipient_name']
+            'هاتف المستلم',         // recipient phone     → $col['recipient_phone']
+            'المدينة',              // recipient city      → $col['city']
+            'الحي',                 // recipient region    → $col['region']
+            'الشارع',               // recipient address   → $col['address']
+            'محتوى الطرد',          // title/content       → $col['content']
+            'السعر',                // delivery_price      → $col['price']
+            'التحصيل',              // collection_amount   → $col['collection']
+            'رقم الإرسالية',        // invoice_number      → $col['invoice_number']
+            'طريقة الدفع',          // collection_method   → $col['payment_method']
+            'الملاحظات',            // notes               → $col['notes']
+            'تاريخ الانشاء',        // booking_date        → $col['create_date']
+            'تاريخ التوصيل',        // delivery_date       → $col['delivery_date']
+            // ── Read-only info columns (not used by importer) ──
+            'باركود التحصيل',       // barcode_collection  (info only)
+            'صافي التحصيل',         // net_collection      (info only)
+            'الحالة',               // status name         (info only / master import)
         ];
 
         $callback = function() use($parcels, $columns) {
@@ -582,23 +604,35 @@ class ParcelController extends Controller
             fputcsv($file, $columns);
 
             foreach ($parcels as $parcel) {
+                $senderName  = $parcel->senderContact?->name   ?? ($parcel->receiver?->name ?? '');
+                $senderPhone = $parcel->senderContact?->phone  ?? '';
+                $recipName   = $parcel->recipientContact?->name  ?? ($parcel->recipient_name  ?? '');
+                $recipPhone  = $parcel->recipientContact?->phone ?? ($parcel->recipient_phone ?? '');
+                $recipCity   = $parcel->recipientContact?->city  ?? '';
+                $recipRegion = '';
+                $recipAddr   = $parcel->recipientContact?->address ?? ($parcel->recipient_address ?? '');
+
                 fputcsv($file, [
                     $parcel->barcode_in,
-                    $parcel->barcode_collection,
-                    $parcel->receiver->name ?? '---',
-                    $parcel->recipient_name ?? ($parcel->recipientContact->name ?? '---'),
-                    $parcel->recipient_phone ?? ($parcel->recipientContact->phone ?? '---'),
-                    $parcel->recipient_address ?? ($parcel->recipientContact->address ?? '---'),
-                    $parcel->delivery_price,
-                    $parcel->collection_amount,
-                    $parcel->net_collection,
-                    $parcel->notes,
-                    $parcel->invoice_number,
-                    $parcel->collection_method,
-                    $parcel->collection_statement_barcode,
-                    $parcel->service_type,
-                    $parcel->booking_date ? $parcel->booking_date->format('Y-m-d') : '---',
-                    $parcel->delivery_date ? $parcel->delivery_date->format('Y-m-d') : '---',
+                    $senderName,
+                    $senderPhone,
+                    $recipName,
+                    $recipPhone,
+                    $recipCity,
+                    $recipRegion,
+                    $recipAddr,
+                    $parcel->title ?? '',
+                    $parcel->delivery_price ?? 0,
+                    $parcel->collection_amount ?? 0,
+                    $parcel->invoice_number ?? '',
+                    $parcel->collection_method ?? 'cash',
+                    $parcel->notes ?? '',
+                    $parcel->booking_date  ? $parcel->booking_date->format('Y-m-d')  : '',
+                    $parcel->delivery_date ? $parcel->delivery_date->format('Y-m-d') : '',
+                    // info-only columns
+                    $parcel->barcode_collection ?? '',
+                    $parcel->net_collection ?? 0,
+                    $parcel->statusModel?->display_name ?? $parcel->status ?? '',
                 ]);
             }
 

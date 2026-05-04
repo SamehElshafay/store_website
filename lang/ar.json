@@ -356,5 +356,12 @@
     "Unique / New": "فريد / جديد",
     "Existing / Update": "موجود / تحديث",
     "Barcode must not exist before": "الباركود لم يُسجَّل مسبقاً في النظام",
-    "Barcode must already be registered": "الباركود موجود مسبقاً في النظام"
+    "Barcode must already be registered": "الباركود موجود مسبقاً في النظام",
+    "Rows per page": "عدد الصفوف",
+    "record": "سجل",
+    "Showing": "يعرض",
+    "to": "إلى",
+    "Page": "صفحة",
+    "of": "من",
+    "Network error during barcode validation": "خطأ في الشبكة أثناء التحقق من الباركود"
 }
