@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (select) {
                 select.querySelector('input[type="hidden"]').value = parcel.sender_contact_id;
                 const inputEl = select.querySelector('.search-input');
-                if (inputEl) inputEl.value = parcel.sender_name || (parcel.sender_contact ? parcel.sender_contact.name : '');
+                if (inputEl) inputEl.value = parcel.sender_contact_name || parcel.sender_name || (parcel.sender_contact ? parcel.sender_contact.name : '');
             }
         } else if (window.defaultSettings && window.defaultSettings.receive && window.defaultSettings.receive.sender_id) {
             const def = window.defaultSettings.receive;
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (select) {
                 select.querySelector('input[type="hidden"]').value = parcel.recipient_contact_id;
                 const inputEl = select.querySelector('.search-input');
-                if (inputEl) inputEl.value = parcel.recipient_name || (parcel.recipient_contact ? parcel.recipient_contact.name : '');
+                if (inputEl) inputEl.value = parcel.recipient_contact_name || parcel.recipient_name || (parcel.recipient_contact ? parcel.recipient_contact.name : '');
             }
         } else if (window.defaultSettings && window.defaultSettings.receive && window.defaultSettings.receive.recipient_id) {
             const def = window.defaultSettings.receive;

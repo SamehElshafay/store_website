@@ -138,9 +138,11 @@
                             </select>
                         </div>
                         <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4">
-                                <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" name="is_unique" id="add_is_unique" checked>
-                                <label class="form-check-label fw-bold text-muted small" for="add_is_unique">{{ __('Barcode Must Be Unique') }}</label>
+                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium">
+                                <input class="form-check-input ms-0 me-3 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="add_is_unique" checked>
+                                <label class="form-check-label fw-800 text-main small" for="add_is_unique">
+                                    {{ __('Barcode Must Be Unique') }}
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -202,9 +204,11 @@
                             </select>
                         </div>
                         <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4">
-                                <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" name="is_unique" id="edit_is_unique">
-                                <label class="form-check-label fw-bold text-muted small" for="edit_is_unique">{{ __('Barcode Must Be Unique') }}</label>
+                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium">
+                                <input class="form-check-input ms-0 me-3 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="edit_is_unique">
+                                <label class="form-check-label fw-800 text-main small" for="edit_is_unique">
+                                    {{ __('Barcode Must Be Unique') }}
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -509,6 +513,31 @@ document.addEventListener('DOMContentLoaded', function() {
 [data-theme="dark"] .glass-modal {
     background: rgba(15, 23, 42, 0.9) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Premium Switch Styling */
+.custom-switch-premium .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-switch-premium .form-check-input:checked {
+    background-color: #6366f1;
+    border-color: #6366f1;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.custom-switch-premium .form-check-label {
+    cursor: pointer;
+    padding-top: 2px;
+    transition: color 0.3s ease;
+}
+
+.custom-switch-premium .form-check-input:hover {
+    border-color: rgba(99, 102, 241, 0.5);
 }
 </style>
 @endsection

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const select = document.getElementById('senderSelectDeliver');
             if (select) {
                 select.querySelector('input[type="hidden"]').value = parcel.sender_contact_id;
-                select.querySelector('.search-input').value = parcel.sender_name || (parcel.sender_contact ? parcel.sender_contact.name : '');
+                select.querySelector('.search-input').value = parcel.sender_contact_name || parcel.sender_name || (parcel.sender_contact ? parcel.sender_contact.name : '');
             }
         } else if (window.defaultSettings && window.defaultSettings.dispatch && window.defaultSettings.dispatch.sender_id) {
             const def = window.defaultSettings.dispatch;
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const select = document.getElementById('recipientSelectDeliver');
             if (select) {
                 select.querySelector('input[type="hidden"]').value = parcel.recipient_contact_id;
-                select.querySelector('.search-input').value = parcel.recipient_name || (parcel.recipient_contact ? parcel.recipient_contact.name : '');
+                select.querySelector('.search-input').value = parcel.recipient_contact_name || parcel.recipient_name || (parcel.recipient_contact ? parcel.recipient_contact.name : '');
             }
         } else if (window.defaultSettings && window.defaultSettings.dispatch && window.defaultSettings.dispatch.recipient_id) {
             const def = window.defaultSettings.dispatch;

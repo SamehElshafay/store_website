@@ -53,6 +53,11 @@
                         <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">
                             {{ $status->display_name }}
                         </div>
+                        <div class="mt-1">
+                            <span class="badge {{ $status->is_unique ? 'bg-primary-soft text-primary' : 'bg-warning-soft text-warning' }} rounded-pill extra-small px-2" style="font-size: 0.55rem;">
+                                {{ $status->is_unique ? __('Unique') : __('Exist') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -263,6 +268,7 @@
                 <h5 class="modal-title fw-bold">
                     <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
                     {{ __('Quick Status Update') }}: <span id="quickStatusName" class="premium-text"></span>
+                    <span id="quickUniquenessBadge" class="badge rounded-pill ms-2 extra-small"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -927,6 +933,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('quickStatusName').innerText = statusName;
         document.getElementById('quickModalType').value = modalType || 'receive';
         document.getElementById('quickIsUnique').value = isUnique ? 'true' : 'false';
+        
+        const badge = document.getElementById('quickUniquenessBadge');
+        if (isUnique) {
+            badge.innerText = "{{ __('Must Be Unique') }}";
+            badge.className = 'badge rounded-pill ms-2 extra-small bg-primary-soft text-primary border border-primary border-opacity-10';
+        } else {
+            badge.innerText = "{{ __('Must Exist') }}";
+            badge.className = 'badge rounded-pill ms-2 extra-small bg-warning-soft text-warning border border-warning border-opacity-10';
+        }
+
         bulkRowsData = {}; // Reset data
         
         const tbody = document.querySelector('#barcodeTable tbody');
@@ -980,20 +996,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const findUrl = "{{ route('parcels.find', ['barcode' => ':BARCODE']) }}".replace(':BARCODE', encodeURIComponent(barcode));
             const res = await fetch(findUrl, { headers: { 'Accept': 'application/json' } });
             
+            console.log(`Barcode Check [${barcode}]: Status=${res.status}, isUnique=${isUnique}`);
+
             if (isUnique) {
-                // For UNIQUE/NEW status, reject if already in DB
-                if (res.status === 200 || res.status === 400) {
+                // Case: STATUS REQUIRES NEW BARCODE (Registration)
+                // If found (200) or delivered (400), it's NOT unique.
+                if (res.ok || res.status === 400) {
                     showToast("{{ __('Rejected') }}", "{{ __('This barcode is already registered in the system.') }}", 'error');
                     resetAddState(originalBtnHtml);
                     return;
                 }
+                // If 404, it's unique. We can proceed to add it as a new parcel.
             } else {
-                // For EXISTING/UPDATE status, reject if NOT in DB
+                // Case: STATUS REQUIRES EXISTING BARCODE (Update)
+                // If not found (404), we cannot update it.
                 if (res.status === 404) {
                     showToast("{{ __('Not Found') }}", "{{ __('This barcode does not exist in the system.') }}", 'error');
                     resetAddState(originalBtnHtml);
                     return;
                 }
+                
                 // If found, pre-link the data for the final submission
                 if (res.ok) {
                     const result = await res.json();
@@ -1002,38 +1024,41 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
+            
+            // If we reached here, validation passed (either new barcode for unique status, or existing barcode for update status)
+            // 3. Success - Add to Table
+            const tbody = document.querySelector('#barcodeTable tbody');
+            const row = document.createElement('tr');
+            row.setAttribute('data-row-index', rowIndex);
+            row.className = 'border-bottom border-white border-opacity-5';
+            
+            row.innerHTML = `
+                <td class="ps-4">
+                    <span class="fw-bold barcode-val">${barcode}</span>
+                    <input type="hidden" class="barcode-input" value="${barcode}">
+                </td>
+                <td class="text-end pe-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-info-soft rounded-pill btn-sm px-3 btn-add-info" data-row="${rowIndex}">
+                            <i class="bi bi-info-circle me-1"></i> <small>{{ __('Info') }}</small>
+                        </button>
+                        <button type="button" class="btn btn-danger-soft rounded-circle btn-sm btn-remove-barcode" style="width: 32px; height: 32px;">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.prepend(row);
+            document.getElementById('emptyBarcodeState').classList.add('d-none');
+            showToast("{{ __('Success') }}", "{{ __('Barcode added to list') }}", 'success');
+            resetAddState(originalBtnHtml);
+
         } catch(e) {
             console.error("Database check failed", e);
+            showToast("{{ __('Error') }}", "{{ __('Network error during barcode validation') }}", 'error');
+            resetAddState(originalBtnHtml);
         }
-
-        // 3. Success - Add to Table
-        const tbody = document.querySelector('#barcodeTable tbody');
-        
-        const row = document.createElement('tr');
-        row.setAttribute('data-row-index', rowIndex);
-        row.className = 'border-bottom border-white border-opacity-5';
-        
-        row.innerHTML = `
-            <td class="ps-4">
-                <span class="fw-bold barcode-val">${barcode}</span>
-                <input type="hidden" class="barcode-input" value="${barcode}">
-            </td>
-            <td class="text-end pe-4">
-                <div class="d-flex gap-2 justify-content-end">
-                    <button type="button" class="btn btn-info-soft rounded-pill btn-sm px-3 btn-add-info" data-row="${rowIndex}">
-                        <i class="bi bi-info-circle me-1"></i> <small>{{ __('Info') }}</small>
-                    </button>
-                    <button type="button" class="btn btn-danger-soft rounded-circle btn-sm btn-remove-barcode" style="width: 32px; height: 32px;">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        
-        tbody.prepend(row);
-        document.getElementById('emptyBarcodeState').classList.add('d-none');
-        showToast("{{ __('Success') }}", "{{ __('Barcode added to list') }}", 'success');
-        resetAddState(originalBtnHtml);
     }
 
     function resetAddState(originalHtml) {
@@ -1066,92 +1091,52 @@ document.addEventListener('DOMContentLoaded', function() {
             const modalType = document.getElementById('quickModalType').value;
             isBulkContext = true;
 
-            if (!barcode.trim()) {
-                showToast("{{ __('Attention') }}", "{{ __('Please enter a barcode first') }}", 'warning');
-                return;
+            const modalId = (modalType === 'receive' ? 'receiveModal' : 'deliverModal');
+            const fillFn = (modalType === 'receive' ? window.fillReceiveForm : window.fillDispatchForm);
+
+            // Fetch from server IF not already in bulkRowsData with details
+            if (!bulkRowsData[currentBulkRowIndex] || Object.keys(bulkRowsData[currentBulkRowIndex]).length <= 1) {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                btn.disabled = true;
+
+                fetch(`/parcels/find/${encodeURIComponent(barcode)}`)
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success && result.data) {
+                            bulkRowsData[currentBulkRowIndex] = result.data;
+                            if (typeof fillFn === 'function') fillFn(result.data);
+                        } else {
+                            // If not found, just pre-fill barcode
+                            if (typeof fillFn === 'function') fillFn({ barcode_in: barcode });
+                        }
+                        
+                        if (quickModal) quickModal.hide();
+                        const targetModal = new bootstrap.Modal(document.getElementById(modalId));
+                        targetModal.show();
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    });
+            } else {
+                // Use local data
+                if (typeof fillFn === 'function') fillFn(bulkRowsData[currentBulkRowIndex]);
+                if (quickModal) quickModal.hide();
+                const targetModal = new bootstrap.Modal(document.getElementById(modalId));
+                targetModal.show();
             }
 
-            // Decide which modal to open
-            const modalId = (modalType === 'receive' ? 'receiveModal' : 'deliverModal');
-            const formId = (modalType === 'receive' ? 'receiveForm' : 'deliverForm');
-            const barcodeFieldName = 'barcode_in'; // Both use barcode_in as the lookup/primary field
-
-            // Pre-fill barcode
-            const form = document.getElementById(formId);
-            const barcodeField = form.querySelector(`[name="${barcodeFieldName}"]`);
-            if (barcodeField) barcodeField.value = barcode;
-
-            // Fetch data
-            fetch(`/parcels/find/${barcode}`)
-                .then(res => res.json())
-                .then(result => {
-                    const senderSelectId = (modalType === 'receive' ? 'senderSelectReceive' : 'senderSelectDeliver');
-                    const recipientSelectId = (modalType === 'receive' ? 'recipientSelectReceive' : 'recipientSelectDeliver');
-
-                    if (result.success && result.data) {
-                        const p = result.data;
-                        // Fill all fields
-                        Object.keys(p).forEach(key => {
-                            const field = form.querySelector(`[name="${key}"]`);
-                            if (field) {
-                                field.value = p[key] || '';
-                                
-                                // Handle Custom Search Selects
-                                if (key === 'sender_contact_id' || key === 'recipient_contact_id') {
-                                    const selectWrapperId = (key === 'sender_contact_id' ? senderSelectId : recipientSelectId);
-                                    const selectWrapper = document.getElementById(selectWrapperId);
-                                    if (selectWrapper && p[key.replace('_id', '')]) {
-                                        const contact = p[key.replace('_id', '')];
-                                        const textEl = selectWrapper.querySelector('.selected-text');
-                                        const inputEl = selectWrapper.querySelector('.search-input');
-                                        if(textEl) textEl.innerText = contact.name;
-                                        if(inputEl) inputEl.value = contact.name;
-                                    }
-                                }
-                            }
-                        });
-                    } else {
-                        // Load from local state if already edited
-                        const data = bulkRowsData[currentBulkRowIndex] || {};
-                        Object.keys(data).forEach(key => {
-                            const field = form.querySelector(`[name="${key}"]`);
-                            if (field) field.value = data[key] || '';
-                        });
-                        
-                        // Clear custom selects if no data
-                        [senderSelectId, recipientSelectId].forEach(id => {
-                            const sw = document.getElementById(id);
-                            if (sw) {
-                                sw.querySelector('.selected-text').innerText = "{{ __('Search...') }}";
-                                sw.querySelector('.search-input').value = '';
-                                sw.querySelector('input[type="hidden"]').value = '';
-                            }
-                        });
-                    }
-                    const modalEl = document.getElementById(modalId);
-                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    
-                    if (quickModal) quickModal.hide();
-                    bsModal.show();
-
-                    modalEl.addEventListener('hidden.bs.modal', function() {
-                        if (quickModal && !document.querySelector('.modal.show')) {
-                            quickModal.show();
-                        }
-                    }, { once: true });
-                })
-                .catch(() => {
-                    const modalEl = document.getElementById(modalId);
-                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    if (quickModal) quickModal.hide();
-                    bsModal.show();
-                    
-                    modalEl.addEventListener('hidden.bs.modal', function() {
-                        if (quickModal && !document.querySelector('.modal.show')) {
-                            quickModal.show();
-                        }
-                    }, { once: true });
-                });
+            // Return to quick modal when closed
+            const modalEl = document.getElementById(modalId);
+            const returnToQuick = function() {
+                if (quickModal && !document.querySelector('.modal.show')) {
+                    quickModal.show();
+                    isBulkContext = false;
+                }
+                modalEl.removeEventListener('hidden.bs.modal', returnToQuick);
+            };
+            modalEl.addEventListener('hidden.bs.modal', returnToQuick);
         }
     });
 
@@ -1167,11 +1152,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     const formData = new FormData(this);
                     const data = {};
                     formData.forEach((v, k) => data[k] = v);
+                    
+                    // Also capture display names for search selects
+                    this.querySelectorAll('.custom-search-select').forEach(wrap => {
+                        const inputEl = wrap.querySelector('.search-input');
+                        const hiddenEl = wrap.querySelector('input[type="hidden"]');
+                        if (inputEl && hiddenEl) {
+                            const nameKey = hiddenEl.name.replace('_id', '_name');
+                            data[nameKey] = inputEl.value;
+                        }
+                    });
+
                     bulkRowsData[currentBulkRowIndex] = data;
                     
                     const btn = document.querySelector(`.btn-add-info[data-row="${currentBulkRowIndex}"]`);
                     if (btn) {
-                        btn.classList.replace('btn-info-soft', 'btn-danger');
+                        btn.classList.replace('btn-info-soft', 'btn-success');
                         btn.classList.add('text-white');
                         btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> <small>{{ __('Info Added') }}</small>`;
                     }

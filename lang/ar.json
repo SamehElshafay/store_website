@@ -344,5 +344,12 @@
     "Exists": "موجود",
     "New": "جديد",
     "Errors Encountered": "الأخطاء التي تم اكتشافها",
-    "Issue": "المشكلة"
+    "Issue": "المشكلة",
+    "Barcode Must Be Unique": "يجب أن يكون الباركود فريداً",
+    "Unique/New": "فريد / جديد",
+    "Existing/Update": "موجود / تحديث",
+    "Must Be Unique": "يجب أن يكون فريداً",
+    "Must Exist": "يجب أن يكون موجوداً",
+    "Unique": "فريد",
+    "Exist": "موجود"
 }
