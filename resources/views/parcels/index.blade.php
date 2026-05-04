@@ -62,6 +62,22 @@
                 </div>
             </div>
         </div>
+        {{-- Premium Progress Overlay --}}
+        <div id="selectionProgressOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center" style="z-index: 10000; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);">
+            <div class="glass-card p-5 rounded-5 text-center shadow-lg border-0" style="min-width: 320px;">
+                <div class="mb-4">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                </div>
+                <h4 class="fw-bold text-main mb-2">{{ __('Processing Selection') }}</h4>
+                <p class="text-muted mb-4 small">{{ __('Please wait while we update all records...') }}</p>
+                <div class="progress rounded-pill bg-dark-soft mb-3" style="height: 12px;">
+                    <div id="selectionProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="fw-bold text-primary">
+                    <span id="selectionCurrentCount">0</span> / <span id="selectionTotalCount">0</span>
+                </div>
+            </div>
+        </div>
         @endpush
         
 @push('modals')
@@ -439,6 +455,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterForm = document.getElementById('filterForm');
     const liveFilters = document.querySelectorAll('.live-filter');
     
+    // --- Select All / Toggle All Logic with Progress ---
+    window.toggleAllParcels = function(master) {
+        const checkboxes = document.querySelectorAll('.parcel-checkbox');
+        const total = checkboxes.length;
+        if (total === 0) return;
+
+        const isChecked = master.checked;
+        const overlay = document.getElementById('selectionProgressOverlay');
+        const progressBar = document.getElementById('selectionProgressBar');
+        const currentText = document.getElementById('selectionCurrentCount');
+        const totalText = document.getElementById('selectionTotalCount');
+
+        // Setup Overlay
+        totalText.innerText = total;
+        currentText.innerText = '0';
+        progressBar.style.width = '0%';
+        overlay.classList.remove('d-none');
+
+        let index = 0;
+        const chunkSize = 100; // Process 100 items per frame
+
+        function processChunk() {
+            const end = Math.min(index + chunkSize, total);
+            for (let i = index; i < end; i++) {
+                checkboxes[i].checked = isChecked;
+            }
+            index = end;
+
+            // Update Progress
+            const percent = (index / total) * 100;
+            progressBar.style.width = percent + '%';
+            currentText.innerText = index;
+
+            if (index < total) {
+                requestAnimationFrame(processChunk);
+            } else {
+                // Done
+                if (window.updateBulkBar) window.updateBulkBar();
+                setTimeout(() => {
+                    overlay.classList.add('d-none');
+                }, 300);
+            }
+        }
+
+        // Start Processing
+        requestAnimationFrame(processChunk);
+    };
+
     // --- Per Page "Show All" Logic ---
     window.confirmShowAll = function() {
         const modalElem = document.getElementById('premiumConfirmModal');
