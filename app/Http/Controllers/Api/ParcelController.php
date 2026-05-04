@@ -103,9 +103,19 @@ class ParcelController extends Controller
             });
         }
 
-        $perPage = (int) in_array((int) $request->get('per_page', 25), [10, 25, 50, 100, 250])
-            ? $request->get('per_page', 25)
-            : 25;
+        $requestedPerPage = $request->get('per_page', 25);
+
+        if ($requestedPerPage === 'all') {
+            // "All" mode: use a very high number — Laravel paginate still works
+            // but gives us total/firstItem/lastItem metadata correctly
+            $totalCount = (clone $query)->count();
+            $perPage    = max($totalCount, 1);
+        } elseif (is_numeric($requestedPerPage) && (int) $requestedPerPage >= 1) {
+            // Any valid custom number (1 → 99999)
+            $perPage = min((int) $requestedPerPage, 99999);
+        } else {
+            $perPage = 25;
+        }
 
         $parcels = $query->latest()->paginate($perPage)->withQueryString();
         $statuses = ParcelStatus::orderBy('sort_order')->get();

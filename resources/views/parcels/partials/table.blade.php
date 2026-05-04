@@ -1,32 +1,69 @@
 {{-- ── Top Bar: Record Count + Per-Page Selector ── --}}
 <div class="px-4 py-3 d-flex align-items-center justify-content-between border-bottom border-white-10 flex-wrap gap-2">
-    {{-- Total Records --}}
+    {{-- Pagination Summary --}}
     <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold fs-6">
-            {{ number_format($parcels->total()) }}
-        </span>
-        <span class="text-muted small">
-            {{ __('record') }}
-            &nbsp;|&nbsp;
-            {{ __('Showing') }}
-            <strong class="text-main">{{ $parcels->firstItem() ?? 0 }}</strong>
-            {{ __('to') }}
-            <strong class="text-main">{{ $parcels->lastItem() ?? 0 }}</strong>
-        </span>
+        <div class="bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold small d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle"></i>
+            <span>
+                {{ __('Showing') }} 
+                <span class="text-main">{{ $parcels->firstItem() ?? 0 }}</span> 
+                {{ __('to') }} 
+                <span class="text-main">{{ $parcels->lastItem() ?? 0 }}</span> 
+                {{ __('of') }} 
+                <span class="text-main fw-800">{{ number_format($parcels->total()) }}</span> 
+                {{ $parcels->total() > 1 ? __('results') : __('result') }}
+            </span>
+        </div>
     </div>
 
-    {{-- Per-Page Selector --}}
-    <form method="GET" action="{{ route('parcels.index') }}" id="perPageForm" class="d-flex align-items-center gap-2">
+    {{-- Per-Page Controls --}}
+    <form method="GET" action="{{ route('parcels.index') }}" id="perPageForm" class="d-flex align-items-center gap-2 flex-wrap">
         {{-- Preserve all current filters --}}
         @foreach(request()->except('per_page', 'page') as $key => $val)
             <input type="hidden" name="{{ $key }}" value="{{ $val }}">
         @endforeach
-        <label class="small text-muted fw-bold mb-0">{{ __('Rows per page') }}:</label>
-        <select name="per_page" class="form-select form-select-sm border-0 bg-dark-soft rounded-pill px-3 fw-bold" style="width: auto; min-width: 80px;" onchange="this.form.submit()">
-            @foreach([10, 25, 50, 100, 250] as $size)
-                <option value="{{ $size }}" {{ request('per_page', 25) == $size ? 'selected' : '' }}>{{ $size }}</option>
-            @endforeach
-        </select>
+
+        <label class="small text-muted fw-bold mb-0 me-1">{{ __('Rows per page') }}:</label>
+
+        {{-- Quick Presets --}}
+        @php
+            $currentPerPage = request('per_page', 25);
+            $presets = [10, 25, 50, 100, 250];
+            $isCustom = !in_array($currentPerPage, $presets) && $currentPerPage !== 'all';
+        @endphp
+        @foreach($presets as $size)
+            <button type="submit" name="per_page" value="{{ $size }}"
+                class="btn btn-sm rounded-pill px-3 fw-bold {{ $currentPerPage == $size ? 'btn-primary' : 'btn-dark-soft' }}">
+                {{ $size }}
+            </button>
+        @endforeach
+
+        {{-- All Records --}}
+        <button type="submit" name="per_page" value="all"
+            class="btn btn-sm rounded-pill px-3 fw-bold {{ $currentPerPage === 'all' ? 'btn-warning text-dark' : 'btn-dark-soft' }}"
+            onclick="return confirm('{{ __('Loading all records may be slow. Continue?') }}')">
+            <i class="bi bi-infinity me-1"></i>{{ __('All') }}
+        </button>
+
+        {{-- Divider --}}
+        <span class="text-muted opacity-25">|</span>
+
+        {{-- Custom Number Input --}}
+        <div class="d-flex align-items-center gap-1">
+            <input type="number"
+                   name="per_page"
+                   id="customPerPageInput"
+                   min="1"
+                   max="99999"
+                   placeholder="{{ __('Custom') }}..."
+                   value="{{ $isCustom ? $currentPerPage : '' }}"
+                   class="form-control form-control-sm border-0 bg-dark-soft rounded-pill text-center fw-bold {{ $isCustom ? 'border border-primary border-opacity-50' : '' }}"
+                   style="width: 90px;"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();this.form.submit();}">
+            <button type="submit" class="btn btn-sm btn-dark-soft rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;" title="{{ __('Apply') }}">
+                <i class="bi bi-arrow-right-short fs-5"></i>
+            </button>
+        </div>
     </form>
 </div>
 

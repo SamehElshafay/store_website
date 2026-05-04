@@ -363,5 +363,10 @@
     "to": "إلى",
     "Page": "صفحة",
     "of": "من",
-    "Network error during barcode validation": "خطأ في الشبكة أثناء التحقق من الباركود"
+    "Network error during barcode validation": "خطأ في الشبكة أثناء التحقق من الباركود",
+    "Custom": "مخصص",
+    "Apply": "تطبيق",
+    "Loading all records may be slow. Continue?": "تحميل كل السجلات قد يكون بطيئاً. هل تريد المتابعة؟",
+    "results": "نتائج",
+    "result": "نتيجة"
 }
