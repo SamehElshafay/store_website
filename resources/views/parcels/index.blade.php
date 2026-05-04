@@ -6,7 +6,7 @@
     <div class="container-fluid py-4 px-4">
 
         @push('modals')
-        {{-- Status Update Modal (Moved to Stack for better stability) --}}
+        {{-- Status Update Modal --}}
         <div class="modal fade" id="statusUpdateModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content glass-card border-0 shadow-lg">
@@ -36,6 +36,29 @@
                             <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnUpdateStatus">{{ __('Confirm Update') }}</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Premium Confirmation Modal --}}
+        <div class="modal fade" id="premiumConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content glass-card border-0 shadow-lg text-center p-4" style="border-radius: 24px;">
+                    <div class="mb-3">
+                        <div class="bg-warning-soft text-warning rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold text-main mb-2">{{ __('Are you sure?') }}</h5>
+                    <p class="text-muted small mb-4">{{ __('Loading all records may be slow and could affect performance.') }}</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-warning rounded-pill fw-bold py-2 shadow-sm text-dark" id="btnConfirmShowAll">
+                            {{ __('Yes, Show All') }}
+                        </button>
+                        <button type="button" class="btn btn-dark-soft rounded-pill fw-bold py-2" data-bs-dismiss="modal">
+                            {{ __('Go Back') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -415,6 +438,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Live Debounced Filter logic
     const filterForm = document.getElementById('filterForm');
     const liveFilters = document.querySelectorAll('.live-filter');
+    
+    // --- Per Page "Show All" Logic ---
+    window.confirmShowAll = function() {
+        const modalElem = document.getElementById('premiumConfirmModal');
+        if (!modalElem) return;
+        
+        const modal = new bootstrap.Modal(modalElem);
+        document.getElementById('btnConfirmShowAll').onclick = function() {
+            const form = document.getElementById('perPageForm');
+            if (form) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'per_page';
+                input.value = 'all';
+                form.appendChild(input);
+                form.submit();
+            }
+        };
+        modal.show();
+    };
+
+    const dashboardWrapper = document.querySelector('.dashboard-wrapper');
     const dateInputs = filterForm.querySelectorAll('input[type="date"]');
 
     function debounce(func, wait) {

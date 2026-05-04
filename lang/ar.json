@@ -368,5 +368,9 @@
     "Apply": "تطبيق",
     "Loading all records may be slow. Continue?": "تحميل كل السجلات قد يكون بطيئاً. هل تريد المتابعة؟",
     "results": "نتائج",
-    "result": "نتيجة"
+    "result": "نتيجة",
+    "Are you sure?": "هل أنت متأكد؟",
+    "Loading all records may be slow and could affect performance.": "تحميل كل السجلات دفعة واحدة قد يكون بطيئاً ويؤثر على أداء الصفحة.",
+    "Yes, Show All": "نعم، عرض الكل",
+    "Go Back": "تراجع"
 }

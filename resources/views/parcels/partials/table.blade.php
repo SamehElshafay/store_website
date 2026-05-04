@@ -39,9 +39,9 @@
         @endforeach
 
         {{-- All Records --}}
-        <button type="submit" name="per_page" value="all"
+        <button type="button" 
             class="btn btn-sm rounded-pill px-3 fw-bold {{ $currentPerPage === 'all' ? 'btn-warning text-dark' : 'btn-dark-soft' }}"
-            onclick="return confirm('{{ __('Loading all records may be slow. Continue?') }}')">
+            onclick="confirmShowAll()">
             <i class="bi bi-infinity me-1"></i>{{ __('All') }}
         </button>
 
@@ -162,4 +162,3 @@
     <div>{{ $parcels->appends(request()->except('page'))->links() }}</div>
 </div>
 @endif
-
