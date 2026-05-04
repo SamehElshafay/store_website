@@ -434,22 +434,26 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
     const id = document.getElementById('edit_status_id').value;
     const btn = this.querySelector('button[type="submit"]');
     btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> {{ __('Saving...') }}`;
     
     try {
-        const formData = new FormData(this);
-        const isUniqueVal = document.getElementById('edit_is_unique').checked;
+        // Build payload manually to ensure is_unique is always included
+        const payload = {
+            name_ar:    document.getElementById('edit_name_ar').value,
+            name_en:    document.getElementById('edit_name_en').value,
+            color:      document.getElementById('edit_color').value,
+            icon:       document.getElementById('editSelectedStatusIcon').value,
+            modal_type: document.getElementById('edit_modal_type').value,
+            is_unique:  document.getElementById('edit_is_unique').checked ? 1 : 0,
+        };
         
-        // Explicitly append since unchecked checkboxes are ignored by FormData
-        // and we removed the name attribute to handle it manually here.
-        formData.append('is_unique', isUniqueVal ? '1' : '0');
-        
-        console.log("Updating Status ID:", id);
-        console.log("Is Unique Checked:", isUniqueVal);
+        console.log('Sending payload:', JSON.stringify(payload));
         
         const response = await fetch(`/parcel-statuses/${id}`, {
-            method: 'POST',
-            body: formData,
+            method: 'PUT',
+            body: JSON.stringify(payload),
             headers: {
+                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -458,16 +462,20 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
         const result = await response.json();
         if (response.ok) {
             window.showToast("{{ __('Updated') }}", result.message, 'success');
-            setTimeout(() => location.reload(), 1000);
+            setTimeout(() => location.reload(), 1200);
         } else {
-            window.showToast("{{ __('Failed') }}", result.message, 'error');
+            window.showToast("{{ __('Failed') }}", result.message || '{{ __('Validation Error') }}', 'error');
             btn.disabled = false;
+            btn.innerHTML = '{{ __('Update Status') }}';
         }
     } catch (err) {
+        console.error(err);
         window.showToast("{{ __('Error') }}", "{{ __('System Error occurred') }}", 'error');
         btn.disabled = false;
+        btn.innerHTML = '{{ __('Update Status') }}';
     }
 });
+
 
 // Set initial selection
 document.addEventListener('DOMContentLoaded', function() {
