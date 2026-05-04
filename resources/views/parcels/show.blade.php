@@ -153,7 +153,7 @@
                 </div>
 
                 <!-- Logistics Grid -->
-                <div class="glass-container p-4 border-0 shadow-lg">
+                <div class="glass-container p-4 mb-4 border-0 shadow-lg">
                     <h5 class="fw-bold mb-4"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i> {{ __('Logistics Information') }}</h5>
                     <div class="row g-4">
                         <div class="col-md-6 border-end">
@@ -186,6 +186,62 @@
                                 <span class="badge bg-dark-soft text-capitalize">{{ __($parcel->collection_method) }}</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Movements History -->
+                <div class="glass-container p-4 border-0 shadow-lg">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i> {{ __('Movements History') }}</h5>
+                        <span class="badge bg-primary-soft text-primary rounded-pill px-3">{{ $parcel->movements->count() }} {{ __('Actions') }}</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead class="bg-dark-soft">
+                                <tr>
+                                    <th class="border-0 small fw-bold text-muted text-uppercase px-3 py-3">{{ __('Date & Time') }}</th>
+                                    <th class="border-0 small fw-bold text-muted text-uppercase px-3 py-3">{{ __('Status') }}</th>
+                                    <th class="border-0 small fw-bold text-muted text-uppercase px-3 py-3">{{ __('Handled By') }}</th>
+                                    <th class="border-0 small fw-bold text-muted text-uppercase px-3 py-3">{{ __('Notes') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($parcel->movements as $movement)
+                                <tr>
+                                    <td class="px-3 py-3 border-0">
+                                        <div class="fw-bold small">{{ $movement->created_at->format('M d, Y') }}</div>
+                                        <div class="text-muted extra-small">{{ $movement->created_at->format('h:i A') }}</div>
+                                    </td>
+                                    <td class="px-3 py-3 border-0">
+                                        <span class="badge rounded-pill px-3 py-1" style="background-color: {{ $movement->status->color ?? '#666' }}22; color: {{ $movement->status->color ?? '#666' }}; border: 1px solid {{ $movement->status->color ?? '#666' }}33;">
+                                            <i class="bi {{ $movement->status->icon ?? 'bi-dot' }} me-1"></i>
+                                            {{ $movement->status->display_name ?? __('N/A') }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-3 border-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-xs bg-dark-soft rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                                <i class="bi bi-person"></i>
+                                            </div>
+                                            <span class="small">{{ $movement->user->name ?? 'System' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3 border-0">
+                                        <p class="small text-muted mb-0 text-truncate" style="max-width: 150px;" title="{{ $movement->notes }}">
+                                            {{ $movement->notes ?: '---' }}
+                                        </p>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted opacity-50">
+                                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                        {{ __('No movements recorded yet.') }}
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

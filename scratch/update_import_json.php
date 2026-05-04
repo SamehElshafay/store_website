@@ -1,4 +1,4 @@
-<?php
+gdi <?php
 $json = file_get_contents('d:/LaravelUI/store/lang/ar.json');
 $data = json_decode($json, true);
 

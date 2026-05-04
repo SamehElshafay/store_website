@@ -79,4 +79,12 @@ class Parcel extends Model
     {
         return $this->belongsTo(ParcelStatus::class, 'status_id');
     }
+
+    /**
+     * Get the history of movements for this parcel.
+     */
+    public function movements()
+    {
+        return $this->hasMany(ParcelMovement::class)->latest();
+    }
 }

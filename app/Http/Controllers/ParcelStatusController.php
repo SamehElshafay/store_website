@@ -20,6 +20,7 @@ class ParcelStatusController extends Controller
             'color' => 'nullable|string|max:20',
             'icon' => 'nullable|string|max:100',
             'modal_type' => 'nullable|string|in:receive,dispatch',
+            'is_unique' => 'nullable|boolean',
         ]);
 
         // Auto-assign next sort order
@@ -28,6 +29,7 @@ class ParcelStatusController extends Controller
 
         $validated['key'] = \Str::slug($validated['name_en']);
         $validated['name'] = $validated['name_ar'];
+        $validated['is_unique'] = $request->boolean('is_unique');
         
         $status = \App\Models\ParcelStatus::create($validated);
 
@@ -48,7 +50,10 @@ class ParcelStatusController extends Controller
             'color' => 'nullable|string|max:20',
             'icon' => 'nullable|string|max:100',
             'modal_type' => 'nullable|string|in:receive,dispatch',
+            'is_unique' => 'nullable|boolean',
         ]);
+
+        $validated['is_unique'] = $request->boolean('is_unique');
 
         $status->update($validated);
 

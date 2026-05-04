@@ -13,6 +13,19 @@ use Carbon\Carbon;
 class ParcelController extends Controller
 {
     /**
+     * Record a status movement for history.
+     */
+    private function recordMovement($parcelId, $statusId, $notes = null)
+    {
+        return \App\Models\ParcelMovement::create([
+            'parcel_id' => $parcelId,
+            'status_id' => $statusId,
+            'user_id'   => Auth::id(),
+            'notes'     => $notes
+        ]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -144,6 +157,10 @@ class ParcelController extends Controller
             'received_at' => Carbon::now(),
             'net_collection' => $net,
         ]));
+
+        if ($parcel->status_id) {
+            $this->recordMovement($parcel->id, $parcel->status_id, __('Initial Reception'));
+        }
 
         return response()->json([
             'success' => true,
@@ -279,6 +296,8 @@ class ParcelController extends Controller
             'delivered_to'=> $validated['delivered_to'] ?? $parcel->recipient_name,
         ]));
 
+        $this->recordMovement($parcel->id, $parcel->status_id, __('Delivered to :name', ['name' => $parcel->delivered_to]));
+
         return response()->json([
             'success' => true,
             'message' => __('Parcel dispatched successfully'),
@@ -313,6 +332,8 @@ class ParcelController extends Controller
             'status' => $newStatus->key,
             'notes' => $request->notes ? $parcel->notes . "\n[" . now()->format('Y-m-d H:i') . "] " . $request->notes : $parcel->notes,
         ]);
+
+        $this->recordMovement($parcel->id, $newStatus->id, $request->notes);
 
         return response()->json([
             'success' => true,
@@ -352,6 +373,7 @@ class ParcelController extends Controller
                 'status_id' => $newStatus->id,
                 'status' => $newStatus->key
             ]);
+            $this->recordMovement($parcel->id, $newStatus->id, __('Bulk Status Update'));
             $updatedCount++;
         }
 
@@ -403,6 +425,7 @@ class ParcelController extends Controller
                 'status_id' => $newStatus->id,
                 'status' => $newStatus->key
             ]);
+            $this->recordMovement($parcel->id, $newStatus->id, __('Bulk Barcode Status Update'));
             $updatedCount++;
         }
 
@@ -445,10 +468,21 @@ class ParcelController extends Controller
             $barcode = $item['barcode'];
             $details = $item['details'] ?? [];
 
-            // Find existing or create new
+            // Find existing
             $parcel = Parcel::where('barcode_in', $barcode)
                 ->orWhere('barcode_out', $barcode)
                 ->first();
+
+            // Check uniqueness constraint
+            if ($statusModel->is_unique && $parcel) {
+                $results['errors'][] = "$barcode: " . __('Barcode already exists.');
+                continue;
+            }
+
+            if (!$statusModel->is_unique && !$parcel) {
+                $results['errors'][] = "$barcode: " . __('Parcel not found.');
+                continue;
+            }
 
             $data = [
                 'status_id' => $statusModel->id,
@@ -458,8 +492,8 @@ class ParcelController extends Controller
             // Map details if provided
             if (!empty($details)) {
                 if (isset($details['title'])) $data['title'] = $details['title'];
-                if (isset($details['sender_id'])) $data['sender_contact_id'] = $details['sender_id'];
-                if (isset($details['recipient_id'])) $data['recipient_contact_id'] = $details['recipient_id'];
+                if (isset($details['sender_contact_id'])) $data['sender_contact_id'] = $details['sender_contact_id'];
+                if (isset($details['recipient_contact_id'])) $data['recipient_contact_id'] = $details['recipient_contact_id'];
                 if (isset($details['collection_amount'])) $data['collection_amount'] = $details['collection_amount'];
                 if (isset($details['delivery_price'])) $data['delivery_price'] = $details['delivery_price'];
                 
@@ -477,13 +511,15 @@ class ParcelController extends Controller
             if ($parcel) {
                 // Update existing
                 $parcel->update($data);
+                $this->recordMovement($parcel->id, $statusModel->id, $data['notes'] ?? __('Status updated via bulk register'));
                 $results['updated']++;
             } else {
                 // Create new
                 $data['barcode_in'] = $barcode;
                 if (!isset($data['title'])) $data['title'] = __('Bulk Registered Parcel') . " " . $barcode;
                 
-                Parcel::create($data);
+                $newParcel = Parcel::create($data);
+                $this->recordMovement($newParcel->id, $statusModel->id, $data['notes'] ?? __('Initially registered via bulk'));
                 $results['created']++;
             }
         }

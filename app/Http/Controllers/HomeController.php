@@ -46,7 +46,7 @@ class HomeController extends Controller
 
     public function showParcel($id)
     {
-        $parcel = \App\Models\Parcel::with(['receiver', 'senderContact', 'recipientContact', 'statusModel'])->findOrFail($id);
+        $parcel = \App\Models\Parcel::with(['receiver', 'senderContact', 'recipientContact', 'statusModel', 'movements.status', 'movements.user'])->findOrFail($id);
         $statuses = \App\Models\ParcelStatus::orderBy('sort_order')->get();
         return view('parcels.show', compact('parcel', 'statuses'));
     }

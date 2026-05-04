@@ -50,17 +50,23 @@
                     </div>
 
                     <div class="small text-muted mb-4 opacity-75">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small fw-bold">{{ __('Action') }}:</span> 
                             <div class="form-check form-switch m-0">
                                 <input class="form-check-input cursor-pointer toggle-modal-type" type="checkbox" 
-                                    role="switch" 
-                                    data-id="{{ $status->id }}"
-                                    {{ $status->modal_type == 'dispatch' ? 'checked' : '' }}>
+                                     role="switch" 
+                                     data-id="{{ $status->id }}"
+                                     {{ $status->modal_type == 'dispatch' ? 'checked' : '' }}>
                                 <label class="form-check-label small fw-bold {{ $status->modal_type == 'dispatch' ? 'text-danger' : 'text-info' }}" style="min-width: 60px; text-align: end;">
-                                    {{ $status->modal_type == 'dispatch' ? __('Dispatch') : __('Receive') }}
+                                     {{ $status->modal_type == 'dispatch' ? __('Dispatch') : __('Receive') }}
                                 </label>
                             </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold">{{ __('Barcode') }}:</span> 
+                            <span class="badge {{ $status->is_unique ? 'bg-primary-soft text-primary' : 'bg-warning-soft text-warning' }} rounded-pill px-2 py-1 extra-small">
+                                {{ $status->is_unique ? __('Unique/New') : __('Existing/Update') }}
+                            </span>
                         </div>
                     </div>
 
@@ -131,6 +137,12 @@
                                 <option value="dispatch">{{ __('Dispatch Modal (Outgoing)') }}</option>
                             </select>
                         </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch p-0 ms-4 mt-4">
+                                <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" name="is_unique" id="add_is_unique" checked>
+                                <label class="form-check-label fw-bold text-muted small" for="add_is_unique">{{ __('Barcode Must Be Unique') }}</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
@@ -188,6 +200,12 @@
                                 <option value="receive">{{ __('Receive Modal (Incoming)') }}</option>
                                 <option value="dispatch">{{ __('Dispatch Modal (Outgoing)') }}</option>
                             </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch p-0 ms-4 mt-4">
+                                <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" name="is_unique" id="edit_is_unique">
+                                <label class="form-check-label fw-bold text-muted small" for="edit_is_unique">{{ __('Barcode Must Be Unique') }}</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -396,6 +414,7 @@ function editStatus(status) {
     document.getElementById('edit_name_en').value = status.name_en;
     document.getElementById('edit_color').value = status.color || '#6366f1';
     document.getElementById('edit_modal_type').value = status.modal_type || 'receive';
+    document.getElementById('edit_is_unique').checked = !!status.is_unique;
     
     // Select Icon
     const icon = status.icon || 'bi-dot';

@@ -32,7 +32,7 @@
                         <a href="{{ route('parcels.index', ['status' => $status->id]) }}" class="stretched-link"></a>
                         
                         {{-- Genius Plus Button --}}
-                        <button class="btn-plus-genius" onclick="event.preventDefault(); event.stopPropagation(); handlePlusClick('{{ $status->id }}', '{{ $status->display_name }}', '{{ $status->modal_type }}')" title="{{ __('Quick Action') }}">
+                        <button class="btn-plus-genius" onclick="event.preventDefault(); event.stopPropagation(); handlePlusClick('{{ $status->id }}', '{{ $status->display_name }}', '{{ $status->modal_type }}', {{ $status->is_unique ? 'true' : 'false' }})" title="{{ __('Quick Action') }}">
                             <i class="bi bi-plus-lg"></i>
                         </button>
 
@@ -270,6 +270,7 @@
                 <div class="modal-body py-4">
                     <input type="hidden" id="quickStatusId" name="status_id">
                     <input type="hidden" id="quickModalType" name="modal_type">
+                    <input type="hidden" id="quickIsUnique" name="is_unique">
                     
                     <div class="alert alert-info bg-info bg-opacity-10 border-0 rounded-4 small mb-4">
                         <i class="bi bi-info-circle me-2"></i>
@@ -921,10 +922,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store details for each row
     let bulkRowsData = {};
 
-    window.handlePlusClick = function(statusId, statusName, modalType) {
+    window.handlePlusClick = function(statusId, statusName, modalType, isUnique) {
         document.getElementById('quickStatusId').value = statusId;
         document.getElementById('quickStatusName').innerText = statusName;
         document.getElementById('quickModalType').value = modalType || 'receive';
+        document.getElementById('quickIsUnique').value = isUnique ? 'true' : 'false';
         bulkRowsData = {}; // Reset data
         
         const tbody = document.querySelector('#barcodeTable tbody');
@@ -956,6 +958,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!barcode) return;
 
         const modalType = document.getElementById('quickModalType').value;
+        const isUnique = document.getElementById('quickIsUnique').value === 'true';
 
         // 1. Check if exists in current UI list
         const existing = Array.from(document.querySelectorAll('.barcode-val')).map(el => el.innerText.trim());
@@ -977,15 +980,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const findUrl = "{{ route('parcels.find', ['barcode' => ':BARCODE']) }}".replace(':BARCODE', encodeURIComponent(barcode));
             const res = await fetch(findUrl, { headers: { 'Accept': 'application/json' } });
             
-            if (modalType === 'receive') {
-                // For NEW parcels, reject if already in DB
+            if (isUnique) {
+                // For UNIQUE/NEW status, reject if already in DB
                 if (res.status === 200 || res.status === 400) {
                     showToast("{{ __('Rejected') }}", "{{ __('This barcode is already registered in the system.') }}", 'error');
                     resetAddState(originalBtnHtml);
                     return;
                 }
             } else {
-                // For DISPATCH/UPDATE, reject if NOT in DB
+                // For EXISTING/UPDATE status, reject if NOT in DB
                 if (res.status === 404) {
                     showToast("{{ __('Not Found') }}", "{{ __('This barcode does not exist in the system.') }}", 'error');
                     resetAddState(originalBtnHtml);
