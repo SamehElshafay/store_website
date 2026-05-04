@@ -137,11 +137,32 @@
                                 <option value="dispatch">{{ __('Dispatch Modal (Outgoing)') }}</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium d-flex align-items-center gap-2">
-                                <input class="form-check-input m-0 cursor-pointer shadow-none" type="checkbox" name="is_unique" id="add_is_unique" checked>
-                                <label class="form-check-label fw-800 text-main small m-0" for="add_is_unique">
-                                    {{ __('Barcode Must Be Unique') }}
+                        <div class="col-12 mt-2">
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-2">{{ __('Barcode Type') }}</label>
+                            <div class="d-flex gap-3">
+                                <label class="barcode-radio-card flex-fill" for="add_is_unique_yes">
+                                    <input type="radio" id="add_is_unique_yes" name="add_is_unique_radio" value="1" checked hidden>
+                                    <div class="barcode-radio-inner">
+                                        <div class="barcode-radio-icon">
+                                            <i class="bi bi-shield-check"></i>
+                                        </div>
+                                        <div>
+                                            <div class="barcode-radio-title">{{ __('Unique / New') }}</div>
+                                            <div class="barcode-radio-desc">{{ __('Barcode must not exist before') }}</div>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="barcode-radio-card flex-fill" for="add_is_unique_no">
+                                    <input type="radio" id="add_is_unique_no" name="add_is_unique_radio" value="0" hidden>
+                                    <div class="barcode-radio-inner">
+                                        <div class="barcode-radio-icon warning">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </div>
+                                        <div>
+                                            <div class="barcode-radio-title">{{ __('Existing / Update') }}</div>
+                                            <div class="barcode-radio-desc">{{ __('Barcode must already be registered') }}</div>
+                                        </div>
+                                    </div>
                                 </label>
                             </div>
                         </div>
@@ -203,11 +224,32 @@
                                 <option value="dispatch">{{ __('Dispatch Modal (Outgoing)') }}</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch p-0 ms-4 mt-4 custom-switch-premium d-flex align-items-center gap-2">
-                                <input class="form-check-input m-0 cursor-pointer shadow-none" type="checkbox" id="edit_is_unique">
-                                <label class="form-check-label fw-800 text-main small m-0" for="edit_is_unique">
-                                    {{ __('Barcode Must Be Unique') }}
+                        <div class="col-12 mt-2">
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-2">{{ __('Barcode Type') }}</label>
+                            <div class="d-flex gap-3">
+                                <label class="barcode-radio-card flex-fill" for="edit_is_unique_yes">
+                                    <input type="radio" id="edit_is_unique_yes" name="edit_is_unique_radio" value="1" hidden>
+                                    <div class="barcode-radio-inner">
+                                        <div class="barcode-radio-icon">
+                                            <i class="bi bi-shield-check"></i>
+                                        </div>
+                                        <div>
+                                            <div class="barcode-radio-title">{{ __('Unique / New') }}</div>
+                                            <div class="barcode-radio-desc">{{ __('Barcode must not exist before') }}</div>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="barcode-radio-card flex-fill" for="edit_is_unique_no">
+                                    <input type="radio" id="edit_is_unique_no" name="edit_is_unique_radio" value="0" hidden>
+                                    <div class="barcode-radio-inner">
+                                        <div class="barcode-radio-icon warning">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </div>
+                                        <div>
+                                            <div class="barcode-radio-title">{{ __('Existing / Update') }}</div>
+                                            <div class="barcode-radio-desc">{{ __('Barcode must already be registered') }}</div>
+                                        </div>
+                                    </div>
                                 </label>
                             </div>
                         </div>
@@ -418,7 +460,15 @@ function editStatus(status) {
     document.getElementById('edit_name_en').value = status.name_en;
     document.getElementById('edit_color').value = status.color || '#6366f1';
     document.getElementById('edit_modal_type').value = status.modal_type || 'receive';
-    document.getElementById('edit_is_unique').checked = !!status.is_unique;
+    
+    // Set radio buttons based on is_unique value
+    if (status.is_unique) {
+        document.getElementById('edit_is_unique_yes').checked = true;
+        setActiveRadioCard('edit_is_unique_yes', 'edit_is_unique_no');
+    } else {
+        document.getElementById('edit_is_unique_no').checked = true;
+        setActiveRadioCard('edit_is_unique_no', 'edit_is_unique_yes');
+    }
     
     // Select Icon
     const icon = status.icon || 'bi-dot';
@@ -438,13 +488,14 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
     
     try {
         // Build payload manually to ensure is_unique is always included
+        const selectedRadio = document.querySelector('input[name="edit_is_unique_radio"]:checked');
         const payload = {
             name_ar:    document.getElementById('edit_name_ar').value,
             name_en:    document.getElementById('edit_name_en').value,
             color:      document.getElementById('edit_color').value,
             icon:       document.getElementById('editSelectedStatusIcon').value,
             modal_type: document.getElementById('edit_modal_type').value,
-            is_unique:  document.getElementById('edit_is_unique').checked ? 1 : 0,
+            is_unique:  selectedRadio ? parseInt(selectedRadio.value) : 1,
         };
         
         console.log('Sending payload:', JSON.stringify(payload));
@@ -481,7 +532,30 @@ document.getElementById('editStatusForm').addEventListener('submit', async funct
 document.addEventListener('DOMContentLoaded', function() {
     const defaultIcon = document.querySelector('.icon-option[data-icon="bi-dot"]');
     if(defaultIcon) selectIcon(defaultIcon, 'bi-dot');
+    
+    // Initialize Add form radio cards
+    setActiveRadioCard('add_is_unique_yes', 'add_is_unique_no');
+    
+    // Attach click listeners to radio cards
+    document.querySelectorAll('.barcode-radio-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (!radio) return;
+            const name = radio.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                r.closest('.barcode-radio-card').classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
 });
+
+function setActiveRadioCard(activeId, inactiveId) {
+    const activeEl = document.getElementById(activeId);
+    const inactiveEl = document.getElementById(inactiveId);
+    if (activeEl) activeEl.closest('.barcode-radio-card').classList.add('active');
+    if (inactiveEl) inactiveEl.closest('.barcode-radio-card').classList.remove('active');
+}
 </script>
 
 <style>
@@ -501,6 +575,71 @@ document.addEventListener('DOMContentLoaded', function() {
 .active-cursor-grabbing:active { cursor: grabbing; }
 .sortable-ghost { opacity: 0.3; transform: scale(0.95); }
 .sortable-chosen { box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2) !important; border: 2px solid #6366f1 !important; }
+
+/* ===== Premium Barcode Radio Cards ===== */
+.barcode-radio-card {
+    cursor: pointer;
+    display: block;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.03);
+    padding: 14px 16px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+.barcode-radio-card:hover {
+    border-color: rgba(99,102,241,0.4);
+    background: rgba(99,102,241,0.06);
+    transform: translateY(-2px);
+}
+.barcode-radio-card.active {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1));
+    box-shadow: 0 0 20px rgba(99,102,241,0.2), inset 0 0 0 1px rgba(99,102,241,0.3);
+}
+.barcode-radio-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.barcode-radio-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+}
+.barcode-radio-icon.warning {
+    background: rgba(234,179,8,0.15);
+    color: #fbbf24;
+}
+.barcode-radio-card.active .barcode-radio-icon {
+    background: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    box-shadow: 0 0 12px rgba(99,102,241,0.3);
+}
+.barcode-radio-card.active .barcode-radio-icon.warning {
+    background: rgba(234,179,8,0.25);
+    color: #fde68a;
+    box-shadow: 0 0 12px rgba(234,179,8,0.25);
+}
+.barcode-radio-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+    line-height: 1.2;
+}
+.barcode-radio-desc {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.45);
+    margin-top: 2px;
+}
 
 /* Custom Form Styling for Dark Theme */
 [data-theme="dark"] .form-control,

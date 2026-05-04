@@ -351,5 +351,10 @@
     "Must Be Unique": "يجب أن يكون فريداً",
     "Must Exist": "يجب أن يكون موجوداً",
     "Unique": "فريد",
-    "Exist": "موجود"
+    "Exist": "موجود",
+    "Barcode Type": "نوع الباركود",
+    "Unique / New": "فريد / جديد",
+    "Existing / Update": "موجود / تحديث",
+    "Barcode must not exist before": "الباركود لم يُسجَّل مسبقاً في النظام",
+    "Barcode must already be registered": "الباركود موجود مسبقاً في النظام"
 }
