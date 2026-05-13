@@ -542,6 +542,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update URL
         window.history.pushState({}, '', url);
 
+        // Update Export Excel Link
+        const exportBtn = document.querySelector('a[href*="parcels-export"]');
+        if (exportBtn) {
+            exportBtn.href = `{{ route('parcels.export') }}?${params.toString()}`;
+        }
+
         // Fetch AJAX
         fetch(url, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -579,6 +585,17 @@ document.addEventListener('DOMContentLoaded', function() {
     dateInputs.forEach(el => {
         el.addEventListener('change', autoSubmit);
     });
+
+    // Initialize Export Link on Load if params exist
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.toString()) {
+            const exportBtn = document.querySelector('a[href*="parcels-export"]');
+            if (exportBtn) {
+                exportBtn.href = `{{ route('parcels.export') }}?${params.toString()}`;
+            }
+        }
+    })();
 
     // Handle AJAX Pagination
     document.addEventListener('click', function(e) {

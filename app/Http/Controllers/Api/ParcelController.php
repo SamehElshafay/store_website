@@ -31,12 +31,44 @@ class ParcelController extends Controller
     public function index(Request $request)
     {
         $query = Parcel::with(['receiver', 'statusModel']);
+        $query = $this->applyFilters($query, $request);
 
-        // Optional: Default to today if no date filter is provided
-        // if (!$request->has('from_date') && !$request->has('to_date') && !$request->has('period')) {
-        //     $query->whereDate('created_at', Carbon::today());
-        // }
+        $requestedPerPage = $request->get('per_page', 25);
 
+        if ($requestedPerPage === 'all') {
+            // "All" mode: use a very high number — Laravel paginate still works
+            // but gives us total/firstItem/lastItem metadata correctly
+            $totalCount = (clone $query)->count();
+            $perPage    = max($totalCount, 1);
+        } elseif (is_numeric($requestedPerPage) && (int) $requestedPerPage >= 1) {
+            // Any valid custom number (1 → 99999)
+            $perPage = min((int) $requestedPerPage, 99999);
+        } else {
+            $perPage = 25;
+        }
+
+        $parcels = $query->latest()->paginate($perPage)->withQueryString();
+        $statuses = ParcelStatus::orderBy('sort_order')->get();
+
+        // 1. Priority: AJAX calls from the site for the dynamic table
+        if ($request->ajax() && !$request->wantsJson()) {
+            return view('parcels.partials.table', compact('parcels', 'statuses'))->render();
+        }
+
+        // 2. Secondary: Pure JSON API requests
+        if ($request->expectsJson()) {
+            return response()->json($parcels);
+        }
+
+        // 3. Final: Initial page load
+        return view('parcels.index', compact('parcels', 'statuses'));
+    }
+
+    /**
+     * Apply all filters to the parcel query.
+     */
+    private function applyFilters($query, Request $request)
+    {
         // Period Filtering
         if ($request->filled('period') && $request->period != 'all') {
             switch ($request->period) {
@@ -103,35 +135,7 @@ class ParcelController extends Controller
             });
         }
 
-        $requestedPerPage = $request->get('per_page', 25);
-
-        if ($requestedPerPage === 'all') {
-            // "All" mode: use a very high number — Laravel paginate still works
-            // but gives us total/firstItem/lastItem metadata correctly
-            $totalCount = (clone $query)->count();
-            $perPage    = max($totalCount, 1);
-        } elseif (is_numeric($requestedPerPage) && (int) $requestedPerPage >= 1) {
-            // Any valid custom number (1 → 99999)
-            $perPage = min((int) $requestedPerPage, 99999);
-        } else {
-            $perPage = 25;
-        }
-
-        $parcels = $query->latest()->paginate($perPage)->withQueryString();
-        $statuses = ParcelStatus::orderBy('sort_order')->get();
-
-        // 1. Priority: AJAX calls from the site for the dynamic table
-        if ($request->ajax() && !$request->wantsJson()) {
-            return view('parcels.partials.table', compact('parcels', 'statuses'))->render();
-        }
-
-        // 2. Secondary: Pure JSON API requests
-        if ($request->expectsJson()) {
-            return response()->json($parcels);
-        }
-
-        // 3. Final: Initial page load
-        return view('parcels.index', compact('parcels', 'statuses'));
+        return $query;
     }
 
     /**
@@ -564,12 +568,9 @@ class ParcelController extends Controller
     public function export(Request $request)
     {
         $query = Parcel::with(['receiver', 'recipientContact', 'statusModel', 'senderContact']);
+        $query = $this->applyFilters($query, $request);
 
-        if ($request->filled('status')) {
-            $query->where('status_id', $request->status);
-        }
-
-        $parcels = $query->get();
+        $parcels = $query->latest()->get();
         
         $filename = "parcels_export_" . date('Y-m-d_H-i') . ".csv";
         $headers = [
