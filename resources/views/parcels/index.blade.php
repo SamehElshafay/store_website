@@ -652,7 +652,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('parcelTableContainer').innerHTML = html;
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 
-                // Re-init state for bulk actions
+                // --- CRITICAL FIX: Update Export Link after pagination change ---
+                const exportBtn = document.querySelector('a[href*="parcels-export"]');
+                if (exportBtn) {
+                    const currentUrl = new URL(window.location.href);
+                    exportBtn.href = `{{ route('parcels.export') }}${currentUrl.search}`;
+                }
+
                 if (typeof updateBulkBar === 'function') updateBulkBar();
 
                 // Re-init tooltips
