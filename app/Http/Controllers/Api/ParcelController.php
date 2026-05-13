@@ -570,7 +570,17 @@ class ParcelController extends Controller
         $query = Parcel::with(['receiver', 'recipientContact', 'statusModel', 'senderContact']);
         $query = $this->applyFilters($query, $request);
 
-        $parcels = $query->latest()->get();
+        $requestedPerPage = $request->get('per_page', 25);
+
+        if ($requestedPerPage === 'all') {
+            // If "All" is selected, get everything matching the filters
+            $parcels = $query->latest()->get();
+        } else {
+            // If a specific number or page is selected, respect the pagination
+            $perPage = (int)$requestedPerPage;
+            // Use paginate to get the exact items for the current page
+            $parcels = $query->latest()->paginate($perPage)->items();
+        }
         
         $filename = "parcels_export_" . date('Y-m-d_H-i') . ".csv";
         $headers = [
