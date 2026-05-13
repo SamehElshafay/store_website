@@ -542,10 +542,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update URL
         window.history.pushState({}, '', url);
 
-        // Update Export Excel Link
+        // --- IMPROVED: Update Export Excel Link with ALL current parameters ---
         const exportBtn = document.querySelector('a[href*="parcels-export"]');
         if (exportBtn) {
-            exportBtn.href = `{{ route('parcels.export') }}?${params.toString()}`;
+            const currentUrl = new URL(window.location.href);
+            exportBtn.href = `{{ route('parcels.export') }}${currentUrl.search}`;
         }
 
         // Fetch AJAX
@@ -588,14 +589,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize Export Link on Load if params exist
     (function() {
-        const params = new URLSearchParams(window.location.search);
-        if (params.toString()) {
-            const exportBtn = document.querySelector('a[href*="parcels-export"]');
-            if (exportBtn) {
-                exportBtn.href = `{{ route('parcels.export') }}?${params.toString()}`;
-            }
+        const exportBtn = document.querySelector('a[href*="parcels-export"]');
+        if (exportBtn && window.location.search) {
+            exportBtn.href = `{{ route('parcels.export') }}${window.location.search}`;
         }
     })();
+
+    // Handle Per Page Form via AJAX
+    document.addEventListener('submit', function(e) {
+        const perPageForm = e.target.closest('#perPageForm');
+        if (perPageForm) {
+            e.preventDefault();
+            
+            // We need to know which button was clicked to get the value
+            const btn = e.submitter;
+            const perPage = btn ? btn.value : 25;
+            
+            const formData = new FormData(perPageForm);
+            if (btn && btn.name === 'per_page') {
+                formData.set('per_page', perPage);
+            }
+            
+            const params = new URLSearchParams(formData);
+            const url = `${perPageForm.action}?${params.toString()}`;
+            
+            window.history.pushState({}, '', url);
+            
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('parcelTableContainer').innerHTML = html;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (typeof updateBulkBar === 'function') updateBulkBar();
+                
+                // Update Export Link
+                const exportBtn = document.querySelector('a[href*="parcels-export"]');
+                if (exportBtn) {
+                    exportBtn.href = `{{ route('parcels.export') }}?${params.toString()}`;
+                }
+            });
+        }
+    });
 
     // Handle AJAX Pagination
     document.addEventListener('click', function(e) {
