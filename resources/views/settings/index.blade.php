@@ -381,7 +381,8 @@ document.getElementById('btnConfirmClear').addEventListener('click', async funct
             
             // Close modal using Bootstrap API
             const modalEl = document.getElementById('clearParcelsModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
+            const _bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+            const modal = _bs ? _bs.Modal.getInstance(modalEl) : null;
             if (modal) modal.hide();
             
             setTimeout(() => window.location.reload(), 1500);

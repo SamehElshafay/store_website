@@ -1,7 +1,8 @@
 {{-- Shared Dispatch Scripts --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const b = window.bootstrap || bootstrap;
+    const b = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+    if (!b) { console.error('Bootstrap not loaded'); return; }
 
     // Helper: Fill Dispatch Form
     window.fillDispatchForm = function(parcel) {

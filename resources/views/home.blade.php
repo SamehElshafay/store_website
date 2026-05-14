@@ -1134,7 +1134,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         if (quickModal) quickModal.hide();
-                        const targetModal = new bootstrap.Modal(document.getElementById(modalId));
+                        const _bs1 = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+                        if (!_bs1) return;
+                        const targetModal = new _bs1.Modal(document.getElementById(modalId));
                         targetModal.show();
                     })
                     .finally(() => {
@@ -1145,7 +1147,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Use local data
                 if (typeof fillFn === 'function') fillFn(bulkRowsData[currentBulkRowIndex]);
                 if (quickModal) quickModal.hide();
-                const targetModal = new bootstrap.Modal(document.getElementById(modalId));
+                const _bs2 = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+                if (!_bs2) return;
+                const targetModal = new _bs2.Modal(document.getElementById(modalId));
                 targetModal.show();
             }
 
@@ -1196,7 +1200,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const modalId = (formId === 'receiveForm' ? 'receiveModal' : 'deliverModal');
                     const modalEl = document.getElementById(modalId);
-                    const inst = bootstrap.Modal.getInstance(modalEl);
+                    const _bs3 = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+                    const inst = _bs3 ? _bs3.Modal.getInstance(modalEl) : null;
                     if (inst) inst.hide();
                     
                     isBulkContext = false;

@@ -475,8 +475,11 @@ function editStatus(status) {
     const iconOpt = document.querySelector(`.edit-icon-option[data-icon="${icon}"]`);
     if(iconOpt) selectIconEdit(iconOpt, icon);
     
-    const modal = new bootstrap.Modal(document.getElementById('editStatusModal'));
-    modal.show();
+    const _bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+    if (_bs) {
+        const modal = new _bs.Modal(document.getElementById('editStatusModal'));
+        modal.show();
+    }
 }
 
 document.getElementById('editStatusForm').addEventListener('submit', async function(e) {

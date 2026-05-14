@@ -329,7 +329,8 @@ function setPeriod(p) {
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- Global Instances ---
-    const b = window.bootstrap || bootstrap;
+    const b = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+    if (!b) { console.error('Bootstrap not loaded'); return; }
     
     // --- Status Update Modal Logic ---
     const statusModalEl = document.getElementById('statusUpdateModal');
@@ -508,7 +509,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalElem = document.getElementById('premiumConfirmModal');
         if (!modalElem) return;
         
-        const modal = new bootstrap.Modal(modalElem);
+        const _bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+        if (!_bs) return;
+        const modal = new _bs.Modal(modalElem);
         document.getElementById('btnConfirmShowAll').onclick = function() {
             const form = document.getElementById('perPageForm');
             if (form) {
@@ -567,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(window.bootstrap) {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
                 tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                    return new (window.bootstrap || bootstrap).Tooltip(tooltipTriggerEl)
                 });
             }
         })
@@ -691,7 +694,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use dynamic modal initiation to avoid errors if not loaded yet
     const getBulkModal = () => {
         const elem = document.getElementById('bulkStatusModal');
-        return elem ? new bootstrap.Modal(elem) : null;
+        const _bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+        return (elem && _bs) ? new _bs.Modal(elem) : null;
     };
 
     // --- Global Visibility for AJax updates (Already defined above) ---
