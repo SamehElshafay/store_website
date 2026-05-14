@@ -1,5 +1,6 @@
-import * as bootstrap from 'bootstrap';
-window.bootstrap = bootstrap;
+// Bootstrap is loaded via CDN in layouts/app.blade.php <head> — no need to bundle it again
+// import * as bootstrap from 'bootstrap';
+// window.bootstrap = bootstrap;
 
 
 /**

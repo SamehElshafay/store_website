@@ -559,6 +559,9 @@
             document.addEventListener('click', (e) => { if (!wrapper.contains(e.target)) resultsDiv.classList.add('results-hidden'); });
         };
     </script>
+    <!-- Bootstrap JS — loaded synchronously BEFORE Vite to guarantee window.bootstrap is available everywhere -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>window.bootstrap = bootstrap;</script>
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
@@ -771,14 +774,5 @@
     <!-- Bootstrap JS Bundle with Popper -->
 
     @include('parcels.partials.dispatch_scripts')
-    <!-- Core JS managed by Vite -->
-    <!-- Bootstrap JS via CDN — loaded synchronously to guarantee window.bootstrap is always available -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Guarantee window.bootstrap is set even if Vite module hasn't fired yet
-        if (typeof window.bootstrap === 'undefined' && typeof bootstrap !== 'undefined') {
-            window.bootstrap = bootstrap;
-        }
-    </script>
 </body>
 </html>
