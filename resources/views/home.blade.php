@@ -257,10 +257,9 @@
     </div>
 </div>
 
-{{-- Modal included at bottom --}}
+@include('parcels.partials.receive_modal')
+@include('parcels.partials.receive_scripts')
 
-
-{{-- Quick Status Update Modal --}}
 <div class="modal fade" id="quickStatusModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content glass-modal border-0 shadow-lg text-main">
@@ -920,27 +919,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const bulkDetailModalEl = document.getElementById('bulkParcelDetailsModal');
     let quickModal = null;
     let bulkDetailModal = null;
-    const bs = window.bootstrap;
+    const bs = window.bootstrap || bootstrap;
     
-    if (quickModalEl && bs) quickModal = new bs.Modal(quickModalEl);
-    if (bulkDetailModalEl && bs) bulkDetailModal = new bs.Modal(bulkDetailModalEl);
-
-    // Fallback if bootstrap is not yet ready (Vite modules can be slightly delayed)
-    function getQuickModal() {
-        if (quickModal) return quickModal;
-        const bs_fallback = window.bootstrap;
-        if (quickModalEl && bs_fallback) {
-            quickModal = new bs_fallback.Modal(quickModalEl);
-            return quickModal;
-        }
-        return null;
+    if (quickModalEl && bs) {
+        quickModal = new bs.Modal(quickModalEl);
+        console.log("Quick Status Modal Initialized");
+    }
+    if (bulkDetailModalEl && bs) {
+        bulkDetailModal = new bs.Modal(bulkDetailModalEl);
     }
 
     // Store details for each row
     let bulkRowsData = {};
 
     window.handlePlusClick = function(statusId, statusName, modalType, isUnique) {
-        console.log("Plus click for status:", statusId);
+        console.log("Plus clicked for status:", statusName);
+        
+        // Ensure modal is initialized if it wasn't yet
+        if (!quickModal) {
+            const el = document.getElementById('quickStatusModal');
+            const b = window.bootstrap || bootstrap;
+            if (el && b) quickModal = new b.Modal(el);
+        }
+
         document.getElementById('quickStatusId').value = statusId;
         document.getElementById('quickStatusName').innerText = statusName;
         document.getElementById('quickModalType').value = modalType || 'receive';
@@ -962,17 +963,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const emptyState = document.getElementById('emptyBarcodeState');
         if (emptyState) emptyState.classList.remove('d-none');
         
-        const modal = getQuickModal();
-        if (modal) {
-            modal.show();
+        if (quickModal) {
+            quickModal.show();
         } else {
-            console.error("Bootstrap Modal is not available yet.");
-            // Fallback: try to find it again in case it loaded late
-            const fallbackModalEl = document.getElementById('quickStatusModal');
-            if (fallbackModalEl && window.bootstrap) {
-                quickModal = new window.bootstrap.Modal(fallbackModalEl);
-                quickModal.show();
-            }
+            console.error("Quick Modal could not be initialized");
+            alert("Error: Modal system not ready. Please refresh the page.");
         }
         setTimeout(() => {
             const input = document.getElementById('bulkScanInput');
@@ -1469,8 +1464,4 @@ document.getElementById('statusUpdateForm').addEventListener('submit', function(
 })();
 </script>
 </div>
-@include('parcels.partials.receive_modal')
-@include('parcels.partials.receive_scripts')
-@include('parcels.partials.dispatch_modal')
-@include('parcels.partials.dispatch_scripts')
 @endsection
