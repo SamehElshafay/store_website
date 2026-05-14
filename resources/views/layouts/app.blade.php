@@ -772,5 +772,13 @@
 
     @include('parcels.partials.dispatch_scripts')
     <!-- Core JS managed by Vite -->
+    <!-- Bootstrap JS via CDN — loaded synchronously to guarantee window.bootstrap is always available -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Guarantee window.bootstrap is set even if Vite module hasn't fired yet
+        if (typeof window.bootstrap === 'undefined' && typeof bootstrap !== 'undefined') {
+            window.bootstrap = bootstrap;
+        }
+    </script>
 </body>
 </html>
