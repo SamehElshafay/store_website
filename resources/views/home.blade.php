@@ -257,7 +257,7 @@
     </div>
 </div>
 
-@include('parcels.partials.receive_modal')
+{{-- Modal included at bottom --}}
 
 
 {{-- Quick Status Update Modal --}}
@@ -920,15 +920,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const bulkDetailModalEl = document.getElementById('bulkParcelDetailsModal');
     let quickModal = null;
     let bulkDetailModal = null;
-    const bs = window.bootstrap || bootstrap;
+    const bs = window.bootstrap;
     
     if (quickModalEl && bs) quickModal = new bs.Modal(quickModalEl);
     if (bulkDetailModalEl && bs) bulkDetailModal = new bs.Modal(bulkDetailModalEl);
+
+    // Fallback if bootstrap is not yet ready (Vite modules can be slightly delayed)
+    function getQuickModal() {
+        if (quickModal) return quickModal;
+        const bs_fallback = window.bootstrap;
+        if (quickModalEl && bs_fallback) {
+            quickModal = new bs_fallback.Modal(quickModalEl);
+            return quickModal;
+        }
+        return null;
+    }
 
     // Store details for each row
     let bulkRowsData = {};
 
     window.handlePlusClick = function(statusId, statusName, modalType, isUnique) {
+        console.log("Plus click for status:", statusId);
         document.getElementById('quickStatusId').value = statusId;
         document.getElementById('quickStatusName').innerText = statusName;
         document.getElementById('quickModalType').value = modalType || 'receive';
@@ -946,11 +958,26 @@ document.addEventListener('DOMContentLoaded', function() {
         bulkRowsData = {}; // Reset data
         
         const tbody = document.querySelector('#barcodeTable tbody');
-        tbody.innerHTML = '';
-        document.getElementById('emptyBarcodeState').classList.remove('d-none');
+        if (tbody) tbody.innerHTML = '';
+        const emptyState = document.getElementById('emptyBarcodeState');
+        if (emptyState) emptyState.classList.remove('d-none');
         
-        if (quickModal) quickModal.show();
-        setTimeout(() => document.getElementById('bulkScanInput').focus(), 500);
+        const modal = getQuickModal();
+        if (modal) {
+            modal.show();
+        } else {
+            console.error("Bootstrap Modal is not available yet.");
+            // Fallback: try to find it again in case it loaded late
+            const fallbackModalEl = document.getElementById('quickStatusModal');
+            if (fallbackModalEl && window.bootstrap) {
+                quickModal = new window.bootstrap.Modal(fallbackModalEl);
+                quickModal.show();
+            }
+        }
+        setTimeout(() => {
+            const input = document.getElementById('bulkScanInput');
+            if (input) input.focus();
+        }, 500);
     };
 
     const bulkScanInput = document.getElementById('bulkScanInput');
