@@ -45,7 +45,7 @@ class ExcelImportController extends Controller
         try {
             $spreadsheet = IOFactory::load($request->file('file')->getPathname());
             $sheet       = $spreadsheet->getActiveSheet();
-            $rows        = $sheet->toArray(null, true, true, false);
+            $rows        = $sheet->toArray(null, false, true, false);
         } catch (\Exception $e) {
             \Log::error('Excel Read Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
@@ -312,7 +312,7 @@ class ExcelImportController extends Controller
         try {
             $spreadsheet = IOFactory::load($request->file('file')->getPathname());
             $sheet       = $spreadsheet->getActiveSheet();
-            $rows        = $sheet->toArray(null, true, true, false);
+            $rows        = $sheet->toArray(null, false, true, false);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => __('Failed to read file: ') . $e->getMessage()], 422);
         }

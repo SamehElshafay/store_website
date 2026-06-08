@@ -51,7 +51,11 @@ class SettingsController extends Controller
 
     public function clearParcels()
     {
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\DB::table('parcel_movements')->truncate();
         \App\Models\Parcel::truncate();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         return response()->json([
             'success' => true,
             'message' => __('All parcels have been deleted successfully')
